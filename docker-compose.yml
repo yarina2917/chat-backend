@@ -1,0 +1,20 @@
+version: '3'
+services:
+  web:
+    links:
+      - db
+    depends_on:
+      - db
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    volumes:
+      - ./src:/srv/src
+      - /src/node_modules
+  db:
+    image: mongo
+    restart: on-failure
+    expose:
+      - 27017
+    volumes:
+      - /data/db
