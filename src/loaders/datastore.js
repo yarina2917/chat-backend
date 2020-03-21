@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const config = require('../config/config')
 
 module.exports.connect = () => new Promise((resolve, reject) => {
-  console.log('dsadsadasdsa', config.dbUrl)
   mongoose.connect(config.dbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
