@@ -5,6 +5,6 @@ router.get('/', (req, res) => {
   res.json({ api: { status: 'success', version: '1' } })
 })
 
-const users = require('./users')
+const users = require('./users/users')
 
 module.exports = [router, users]
