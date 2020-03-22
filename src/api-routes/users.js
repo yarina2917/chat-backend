@@ -43,4 +43,4 @@ router.put('/users/:id', authentication.apiKey, validate(validator.updateUser), 
         .catch(next)
 })
 
-module.exports = router;
+module.exports = router

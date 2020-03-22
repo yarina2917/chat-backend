@@ -14,22 +14,22 @@ const app = express()
 require('dotenv').config()
 
 require('./loaders/datastore')
-    .connect()
-    .then(() => {
-        app.use(cors())
-        app.use(compression())
-        app.use(bodyParser.json())
+  .connect()
+  .then(() => {
+    app.use(cors())
+    app.use(compression())
+    app.use(bodyParser.json())
 
-        app.use('/api/v1', apiV1)
+    app.use('/api/v1', apiV1)
 
-        app.use((req, res, next) => next(createError(404)))
+    app.use((req, res, next) => next(createError(404)))
 
-        app.use(validateError)
+    app.use(validateError)
 
-        app.listen(config.port, () => {
-            console.log(`Server works on port ${config.port}`)
-        })
+    app.listen(config.port, () => {
+      console.log(`Server works on port ${config.port}`)
     })
-    .catch(console.error)
+  })
+  .catch(console.error)
 
 module.exports = app
