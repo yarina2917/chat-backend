@@ -6,5 +6,6 @@ router.get('/', (req, res) => {
 })
 
 const users = require('./users')
+const contacts = require('./contacts/contacts')
 
-module.exports = [router, users]
+module.exports = [router, users, contacts]
