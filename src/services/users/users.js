@@ -2,6 +2,7 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 const notFound = require('../../errors/not-found')
+const { upload } = require('../../helpers/google-cloud-storage')
 
 const User = require('../../models/user')
 const File = require('../../models/file')
@@ -25,7 +26,11 @@ function updateUser (id, userData) {
 
 function updateUserAvatar (id, image, headers) {
   return new Promise((resolve, reject) => {
-    console.log('fsdfdsfdsfdsfdsfds', id)
+    upload('test2.jpg', image)
+      .then(data => {
+        console.log('datadtadasdadasdas')
+      })
+      .catch(err => console.log('erererer', err))
     User.findById(id)
       .then(user => {
         // TODO add google bucket

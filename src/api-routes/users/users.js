@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const Multer = require('multer')
 
 const authentication = require('../../services/passport/authentificate-midleware')
 const validator = require('../../validators/user/validator-user')
@@ -7,6 +8,11 @@ const { validate } = require('../../validators/validate-middleware')
 
 const userService = require('../../services/users/users')
 const requireContentType = require('../../errors/require-content-type')
+
+const multer = Multer({
+  storage: Multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+})
 
 router.post('/users/create', validate(validator.createUser), (req, res, next) => {
   userService.createUser(req.body)
@@ -44,10 +50,14 @@ router.put('/users/:id', authentication.apiKey, validate(validator.updateUser), 
     .catch(next)
 })
 
-router.put('/users/:id/avatar', (req, res, next) => {
-  userService.updateUserAvatar(req.params.id, req.body, req.headers)
+router.put('/users/:id/avatar', multer.single('file'), (req, res, next) => {
+  const chunks = []
+  req.on('data', chunk => chunks.push(chunk))
+  req.on('end', () => {
+  userService.updateUserAvatar(req.params.id, Buffer.concat(chunks), req.headers)
     .then(data => res.status(200).send(data))
     .catch(next)
+  })
 })
 
 module.exports = router
