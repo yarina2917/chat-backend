@@ -10,11 +10,11 @@ const fileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  type: {
+  ext: {
     type: String,
     required: true
   },
-  size: {
+  url: {
     type: String,
     required: true
   }

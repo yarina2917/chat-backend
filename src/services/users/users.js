@@ -2,7 +2,8 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 const notFound = require('../../errors/not-found')
-const { upload } = require('../../helpers/google-cloud-storage')
+const { upload, remove } = require('../../helpers/google-cloud-storage')
+const FileType = require('file-type')
 
 const User = require('../../models/user')
 const File = require('../../models/file')
@@ -24,23 +25,59 @@ function updateUser (id, userData) {
   })
 }
 
-function updateUserAvatar (id, image, headers) {
+function updateUserAvatar (id, imageBuffer, originalName) {
   return new Promise((resolve, reject) => {
-    upload('test2.jpg', image)
-      .then(data => {
-        console.log('datadtadasdadasdas')
+    let fileExt = ''
+    FileType.fromBuffer(imageBuffer)
+      .then(fileDetails => {
+        if (!fileDetails) {
+          reject(createError(400, 'Wrong request. Request should contain a file.'))
+        }
+        fileExt = fileDetails.ext
+        return upload(imageBuffer, fileExt)
+          .then(data => data)
+          .catch(error => reject(createError(error.status || 400, error.message)))
       })
-      .catch(err => console.log('erererer', err))
+      .then(file => {
+        return User.findById(id)
+          .then(user => {
+            const newFile = new File({
+              key: file.key,
+              url: file.publicUrl,
+              ext: fileExt,
+              originalName: originalName
+            })
+            newFile.save()
+            user.avatar = newFile.id
+            user.save()
+            return newFile
+          })
+          .catch(error => reject(createError(error.status || 400, error.message)))
+      })
+      .then(resolve)
+      .catch(reject)
+  })
+}
+
+function deleteAvatar (id) {
+  return new Promise((resolve, reject) => {
     User.findById(id)
+      .populate('avatar')
       .then(user => {
-        // TODO add google bucket
-        // const file = new File(image)
-        // file.save()
-        // user.avatar = file.id
-        // user.save()
-        resolve()
+        remove(user.avatar.key)
+        return user
       })
-      .catch(error => reject(error))
+      .then(user => {
+        return File.findOneAndRemove({ _id: user.avatar._id })
+          .then(() => {
+            user.avatar = null
+            user.save()
+            return user
+          })
+          .catch(err => reject(err))
+      })
+      .then(resolve)
+      .catch(reject)
   })
 }
 
@@ -87,5 +124,6 @@ module.exports = {
   loginUser,
   logoutUser,
   updateUser,
-  updateUserAvatar
+  updateUserAvatar,
+  deleteAvatar
 }

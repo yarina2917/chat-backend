@@ -50,14 +50,20 @@ router.put('/users/:id', authentication.apiKey, validate(validator.updateUser), 
     .catch(next)
 })
 
-router.put('/users/:id/avatar', multer.single('file'), (req, res, next) => {
+router.put('/users/:id/avatar', authentication.apiKey, (req, res, next) => {
   const chunks = []
   req.on('data', chunk => chunks.push(chunk))
   req.on('end', () => {
-  userService.updateUserAvatar(req.params.id, Buffer.concat(chunks), req.headers)
+    userService.updateUserAvatar(req.params.id, Buffer.concat(chunks), req.headers['x-file-name'])
+      .then(data => res.status(200).send(data))
+      .catch(next)
+  })
+})
+
+router.delete('/users/:id/avatar', authentication.apiKey, (req, res, next) => {
+  userService.deleteAvatar(req.params.id)
     .then(data => res.status(200).send(data))
     .catch(next)
-  })
 })
 
 module.exports = router
