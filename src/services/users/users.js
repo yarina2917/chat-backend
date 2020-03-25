@@ -27,20 +27,28 @@ function updateUser (id, userData) {
 
 function updateUserAvatar (id, imageBuffer, originalName) {
   return new Promise((resolve, reject) => {
-    let fileExt = ''
-    FileType.fromBuffer(imageBuffer)
-      .then(fileDetails => {
-        if (!fileDetails) {
-          reject(createError(400, 'Wrong request. Request should contain a file.'))
+    User.findById(id)
+      .populate('avatar')
+      .then(async user => {
+        if (user.avatar && user.avatar.key) {
+          await remove(user.avatar.key)
         }
-        fileExt = fileDetails.ext
-        return upload(imageBuffer, fileExt)
-          .then(data => data)
-          .catch(error => reject(createError(error.status || 400, error.message)))
+        user.avatar = null
+        return user
       })
-      .then(file => {
-        return User.findById(id)
-          .then(user => {
+      .then(user => {
+        let fileExt = ''
+        return FileType.fromBuffer(imageBuffer)
+          .then(fileDetails => {
+            if (!fileDetails) {
+              reject(createError(400, 'Wrong request. Request should contain a file.'))
+            }
+            fileExt = fileDetails.ext
+            return upload(imageBuffer, fileExt)
+              .then(data => data)
+              .catch(error => reject(createError(error.status || 400, error.message)))
+          })
+          .then(file => {
             const newFile = new File({
               key: file.key,
               url: file.publicUrl,
@@ -52,7 +60,6 @@ function updateUserAvatar (id, imageBuffer, originalName) {
             user.save()
             return newFile
           })
-          .catch(error => reject(createError(error.status || 400, error.message)))
       })
       .then(resolve)
       .catch(reject)
@@ -112,6 +119,7 @@ function getUser (id) {
   return new Promise((resolve, reject) => {
     User
       .findById(id)
+      .populate('avatar')
       .then(data => resolve(data))
       .catch(error => reject(error))
   })

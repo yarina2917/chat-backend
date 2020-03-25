@@ -8,7 +8,6 @@ class NotFoundError extends HttpError {
 }
 
 module.exports = (data) => {
-  console.log('asdsadsadsa')
   if (!data) {
     return new NotFoundError()
   }
