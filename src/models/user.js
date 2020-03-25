@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     default: uuid.v4
   },
   avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'File' }
+  },
+  contacts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: {
     createdAt: 'createdAt',
