@@ -15,7 +15,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: uuid.v4
-  }
+  },
+  contacts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: {
     createdAt: 'createdAt',
