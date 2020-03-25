@@ -1,7 +1,6 @@
 const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
-const notFound = require('../../errors/not-found')
 const { upload, remove } = require('../../helpers/google-cloud-storage')
 const FileType = require('file-type')
 

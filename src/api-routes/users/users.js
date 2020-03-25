@@ -1,18 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const Multer = require('multer')
 
 const authentication = require('../../services/passport/authentificate-midleware')
 const validator = require('../../validators/user/validator-user')
 const { validate } = require('../../validators/validate-middleware')
 
 const userService = require('../../services/users/users')
+// TODO add into upload
 const requireContentType = require('../../errors/require-content-type')
-
-const multer = Multer({
-  storage: Multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }
-})
 
 router.post('/users/create', validate(validator.createUser), (req, res, next) => {
   userService.createUser(req.body)
