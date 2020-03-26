@@ -9,6 +9,9 @@ function generateChatValidator (type) {
       },
       chatType: {
         type: 'string'
+      },
+      description: {
+        type: 'string'
       }
     }
   }

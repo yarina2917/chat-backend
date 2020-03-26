@@ -8,6 +8,7 @@ const chatSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  description: { type: String },
   chatType: {
     type: String,
     required: true,
