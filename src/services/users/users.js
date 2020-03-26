@@ -54,7 +54,7 @@ function updateUserAvatar (id, imageBuffer, originalName) {
               ext: fileExt,
               originalName: originalName
             })
-            newFile.save()
+            await newFile.save()
             user.avatar = newFile.id
             await user.save()
             return newFile
@@ -69,8 +69,8 @@ function deleteAvatar (id) {
   return new Promise((resolve, reject) => {
     User.findById(id)
       .populate('avatar')
-      .then(user => {
-        remove(user.avatar.key)
+      .then(async user => {
+        await remove(user.avatar.key)
         return user
       })
       .then(user => {
