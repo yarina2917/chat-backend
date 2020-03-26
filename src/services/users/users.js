@@ -56,8 +56,7 @@ function updateUserAvatar (id, imageBuffer, originalName) {
             })
             newFile.save()
             user.avatar = newFile.id
-            user.save()
-            return newFile
+            return user.save()
           })
       })
       .then(resolve)
@@ -77,8 +76,7 @@ function deleteAvatar (id) {
         return File.findOneAndRemove({ _id: user.avatar._id })
           .then(() => {
             user.avatar = null
-            user.save()
-            return user
+            return user.save()
           })
           .catch(err => reject(err))
       })

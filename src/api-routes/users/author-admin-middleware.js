@@ -1,5 +1,5 @@
 const { ROLE_SUPER_ADMIN } = require('../config/user-roles')
-const NotFound = require('../../errors/not-found')
+const NotFound = require('../../services/errors/not-found')
 const createError = require('http-errors')
 
 const adminOrAuthor = (entity, fieldId) => (req, res, next) => {
