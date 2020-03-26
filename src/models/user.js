@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: uuid.v4
   },
+  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
   contacts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

@@ -1,6 +1,8 @@
 version: '3'
 services:
   web:
+    ports:
+    - 3000:3000
     links:
       - db
     depends_on:
@@ -10,7 +12,7 @@ services:
       context: ./
     volumes:
       - ./src:/srv/src
-      - /src/node_modules
+      - /node_modules
   db:
     image: mongo
     restart: on-failure
