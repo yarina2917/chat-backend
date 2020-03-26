@@ -47,7 +47,7 @@ function updateUserAvatar (id, imageBuffer, originalName) {
               .then(data => data)
               .catch(error => reject(createError(error.status || 400, error.message)))
           })
-          .then(file => {
+          .then(async file => {
             const newFile = new File({
               key: file.key,
               url: file.publicUrl,
@@ -56,7 +56,8 @@ function updateUserAvatar (id, imageBuffer, originalName) {
             })
             newFile.save()
             user.avatar = newFile.id
-            return user.save()
+            await user.save()
+            return newFile
           })
       })
       .then(resolve)
