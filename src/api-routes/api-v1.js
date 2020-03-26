@@ -6,6 +6,7 @@ router.get('/', (req, res) => {
 })
 
 const users = require('./users/users')
+const chats = require('./chats/chats')
 const contacts = require('./contacts/contacts')
 
-module.exports = [router, users, contacts]
+module.exports = [router, users, chats, contacts]
