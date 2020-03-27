@@ -45,8 +45,24 @@ function updateChat (id, chatData) {
   })
 }
 
+function addMembers(chatId, users) {
+  return new Promise((resolve, reject) => {
+    Chat.findById(chatId)
+        .then(chat => {
+          users.forEach((userId) => {
+            if (chat.users.indexOf(userId) <= -1) {
+              chat.users.push(userId)
+            }
+          })
+          return chat.save()
+        })
+        .catch(error => reject(error.message))
+  })
+}
+
 module.exports = {
   getChats,
   createChat,
-  updateChat
+  updateChat,
+  addMembers
 }

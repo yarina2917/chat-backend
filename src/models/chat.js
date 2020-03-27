@@ -15,7 +15,7 @@ const chatSchema = new mongoose.Schema({
     enum: { values: chatTypes }
   },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  cover: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
+  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
   users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: {
