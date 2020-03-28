@@ -1,11 +1,8 @@
 const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
-const { upload, remove } = require('../../helpers/google-cloud-storage')
-const FileType = require('file-type')
 
 const User = require('../../models/user')
-const File = require('../../models/file')
 
 function createUser (userData) {
   return new Promise((resolve, reject) => {
@@ -24,67 +21,6 @@ function updateUser (id, userData) {
   })
 }
 
-function updateUserAvatar (id, imageBuffer, originalName) {
-  return new Promise((resolve, reject) => {
-    User.findById(id)
-      .populate('avatar')
-      .then(async user => {
-        if (user.avatar && user.avatar.key) {
-          await remove(user.avatar.key)
-        }
-        user.avatar = null
-        return user
-      })
-      .then(user => {
-        let fileExt = ''
-        return FileType.fromBuffer(imageBuffer)
-          .then(fileDetails => {
-            if (!fileDetails) {
-              reject(createError(400, 'Wrong request. Request should contain a file.'))
-            }
-            fileExt = fileDetails.ext
-            return upload(imageBuffer, fileExt)
-              .then(data => data)
-              .catch(error => reject(createError(error.status || 400, error.message)))
-          })
-          .then(async file => {
-            const newFile = new File({
-              key: file.key,
-              url: file.publicUrl,
-              ext: fileExt,
-              originalName: originalName
-            })
-            await newFile.save()
-            user.avatar = newFile.id
-            await user.save()
-            return newFile
-          })
-      })
-      .then(resolve)
-      .catch(reject)
-  })
-}
-
-function deleteAvatar (id) {
-  return new Promise((resolve, reject) => {
-    User.findById(id)
-      .populate('avatar')
-      .then(async user => {
-        await remove(user.avatar.key)
-        return user
-      })
-      .then(user => {
-        return File.findOneAndRemove({ _id: user.avatar._id })
-          .then(() => {
-            user.avatar = null
-            return user.save()
-          })
-          .catch(err => reject(err))
-      })
-      .then(resolve)
-      .catch(reject)
-  })
-}
 
 function loginUser (userData) {
   return new Promise((resolve, reject) => {
@@ -130,6 +66,4 @@ module.exports = {
   loginUser,
   logoutUser,
   updateUser,
-  updateUserAvatar,
-  deleteAvatar
 }

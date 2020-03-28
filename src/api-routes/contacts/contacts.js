@@ -5,6 +5,10 @@ const authentication = require('../../services/passport/authentificate-midleware
 
 const contactsService = require('../../services/contacts/contacts')
 
+router.get('/contacts/:id', authentication.apiKey, (req, res) => {
+  res.status(200).send({data: !!res.req.user.contacts.includes(req.params.id)})
+})
+
 router.get('/contacts', authentication.apiKey, (req, res, next) => {
   contactsService.getContacts(req.headers['x-api-key'])
     .then(data => res.status(200).send(data))
