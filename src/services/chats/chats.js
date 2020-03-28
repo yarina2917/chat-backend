@@ -41,7 +41,10 @@ function createChat (author, chatData) {
     User.findById(author)
       .populate('chats')
       .then(async currentUser => {
-        const chatExist = chatData.chatType === DIALOG && currentUser.chats.find(chat => chat.chatType === DIALOG && (chat.users.find(user => user.toString() === chatData.users[0].toString())))
+        const chatExist =
+          chatData.chatType === DIALOG &&
+          currentUser.chats.find(chat => chat.chatType === DIALOG &&
+            (chat.users.find(user => user.toString() === chatData.users[0].toString())))
         if (chatExist) {
           return resolve({
             message: 'Chat already exist!',
