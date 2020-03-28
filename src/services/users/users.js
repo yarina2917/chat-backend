@@ -21,7 +21,6 @@ function updateUser (id, userData) {
   })
 }
 
-
 function loginUser (userData) {
   return new Promise((resolve, reject) => {
     User
