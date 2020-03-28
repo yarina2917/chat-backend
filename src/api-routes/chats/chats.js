@@ -10,14 +10,22 @@ const chatService = require('../../services/chats/chats')
 // TODO ADD AUTHOR middleware
 router.get('/chats', authentication.apiKey, (req, res, next) => {
   chatService.getChats(req.user._id)
-    .then(data => res.status(200).send(data))
+    .then(data => {
+      res.status(200).send(data)
+    })
     .catch(next)
 })
 
-router.post('/chats/add-members', authentication.apiKey, (req, res, next) => {
-  chatService.addMembers(req.params.id, req.body)
-      .then(data => res.status(200).send(data))
-      .catch(next)
+router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
+  chatService.getChatById(req.params.id)
+    .then(data => res.status(200).send(data))
+    .catch(err => next(err))
+})
+
+router.post('/chats/:id/add-members', authentication.apiKey, (req, res, next) => {
+  chatService.addMembers(req.params.id, req.body.users)
+    .then(data => res.status(200).send(data))
+    .catch(next)
 })
 
 router.post('/chats', validate(validator.createChat), authentication.apiKey, (req, res, next) => {
@@ -31,6 +39,5 @@ router.put('/chats/:id', validate(validator.updateChat), authentication.apiKey, 
     .then(data => res.status(200).send(data))
     .catch(next)
 })
-
 
 module.exports = router
