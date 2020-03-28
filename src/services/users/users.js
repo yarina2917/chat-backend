@@ -8,7 +8,7 @@ function createUser (userData) {
   return new Promise((resolve, reject) => {
     const user = new User(userData)
     user.save()
-      .then(data => resolve(pick(data, ['_id', 'apiKey'])))
+      .then(data => resolve(pick(data, ['_id', 'apiKey', 'username'])))
       .catch(error => reject(error.message.includes('duplicate') ? createError(400, 'Username is already used') : error))
   })
 }
@@ -53,7 +53,7 @@ function getUser (id) {
   return new Promise((resolve, reject) => {
     User
       .findById(id)
-      .populate('avatar')
+      .populate('avatar.dataId')
       .then(data => resolve(data))
       .catch(error => reject(error))
   })
