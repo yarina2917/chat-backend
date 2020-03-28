@@ -10,10 +10,10 @@ function updateAvatar (id, imageBuffer, originalName, type) {
     return new Promise((resolve, reject) => {
         const model = type === 'Profile' ? User : Chat
         model.findById(id)
-            .populate('avatar')
+            .populate('avatar.dataId')
             .then(async user => {
-                if (user.avatar && user.avatar.key) {
-                    await remove(user.avatar.key)
+                if (user.avatar && user.avatar.dataId && user.avatar.dataId.key) {
+                    await remove(user.avatar.dataId.key)
                 }
                 user.avatar = null
                 return user
@@ -38,7 +38,10 @@ function updateAvatar (id, imageBuffer, originalName, type) {
                             originalName: originalName
                         })
                         await newFile.save()
-                        user.avatar = newFile.id
+                        user.avatar = {
+                            dataId: newFile.id,
+                            url: file.publicUrl
+                        }
                         await user.save()
                         return newFile
                     })
@@ -52,9 +55,9 @@ function deleteAvatar (id, type) {
     return new Promise((resolve, reject) => {
         const model = type === 'Profile' ? User : Chat
         model.findById(id)
-            .populate('avatar')
+            .populate('avatar.dataId')
             .then(async user => {
-                await remove(user.avatar.key)
+                await remove(user.avatar.dataId.key)
                 return user
             })
             .then(user => {
