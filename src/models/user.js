@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
       ref: 'File'
     }
   },
-  contacts: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
+  contacts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: {
     createdAt: 'createdAt',

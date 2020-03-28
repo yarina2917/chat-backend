@@ -30,7 +30,7 @@ require('./loaders/datastore')
     app.use(validateError)
 
     io.on('connection', socket => {
-        socketConnect(socket)
+      socketConnect(socket)
     })
 
     http.listen(config.port, () => {
@@ -38,4 +38,3 @@ require('./loaders/datastore')
     })
   })
   .catch(console.error)
-
