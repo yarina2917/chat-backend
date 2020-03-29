@@ -34,10 +34,7 @@ function getMessages (chatId) {
     Message
       .find({ chatId })
       .populate('authorId')
-      .then((messages) => {
-        const filterMessages = messages.map(message => generateMessagesObject(message, message.authorId))
-        resolve(filterMessages)
-      })
+      .then((messages) => resolve(messages.map(message => generateMessagesObject(message, message.authorId))))
       .catch(error => reject(error))
   })
 }
