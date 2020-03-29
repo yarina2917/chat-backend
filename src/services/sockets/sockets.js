@@ -19,6 +19,17 @@ function socketConnect (socket) {
         // TODO: replace with room io.in('chat').emit()
         socket.emit('notifyMessage', data)
         socket.broadcast.emit('notifyMessage', data)
+        socket.broadcast.emit('notifyStopTyping', data.user.username)
+      })
+      .catch(err => console.log(err))
+  })
+
+  socket.on('deleteMessages', data => {
+    messagesService.deleteMessages(data.messages, data.chatId)
+      .then(() => {
+        // TODO: replace with room io.in('chat').emit()
+        socket.emit('notifyDeleteMessage', data.messages)
+        socket.broadcast.emit('notifyDeleteMessage', data.messages)
       })
       .catch(err => console.log(err))
   })

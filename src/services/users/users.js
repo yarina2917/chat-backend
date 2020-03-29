@@ -2,6 +2,8 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 
+const usersFields = ['_id', 'username', 'avatar.url']
+
 const User = require('../../models/user')
 
 function createUser (userData) {
@@ -53,7 +55,7 @@ function getUser (id) {
     User
       .findById(id)
       .populate('avatar.dataId')
-      .then(data => resolve(data))
+      .then(data => resolve(pick(data, usersFields)))
       .catch(error => reject(error))
   })
 }

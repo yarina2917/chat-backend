@@ -6,9 +6,11 @@ const User = require('../../models/user')
 const Chat = require('../../models/chat')
 const File = require('../../models/file')
 
+const { PROFILE } = require('../../config/chat-types')
+
 function updateAvatar (id, imageBuffer, originalName, type) {
   return new Promise((resolve, reject) => {
-    const model = type === 'Profile' ? User : Chat
+    const model = type === PROFILE ? User : Chat
     model.findById(id)
       .populate('avatar.dataId')
       .then(async user => {
@@ -53,7 +55,7 @@ function updateAvatar (id, imageBuffer, originalName, type) {
 
 function deleteAvatar (id, type) {
   return new Promise((resolve, reject) => {
-    const model = type === 'Profile' ? User : Chat
+    const model = type === PROFILE ? User : Chat
     model.findById(id)
       .populate('avatar.dataId')
       .then(async user => {
@@ -63,7 +65,9 @@ function deleteAvatar (id, type) {
       .then(user => {
         return File.findOneAndRemove({ _id: user.avatar._id })
           .then(() => {
-            user.avatar = null
+            user.avatar = {
+              url: null
+            }
             return user.save()
           })
           .catch(err => reject(err))

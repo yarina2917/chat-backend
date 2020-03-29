@@ -4,37 +4,78 @@ const createError = require('http-errors')
 
 const Message = require('../../models/message')
 const User = require('../../models/user')
+const Chat = require('../../models/chat')
 
 function saveMessage (messageData) {
   return new Promise((resolve, reject) => {
     const message = new Message(messageData)
     message.save()
-      .then(data => {
-        User
-          .findById(messageData.authorId)
-          .then(user => {
-            resolve({
-              _id: data.id,
-              message: data.message,
-              date: data.createdAt,
-              user: {
-                _id: user._id,
-                username: user.username,
-                avatar: user.avatar && user.avatar.url ? user.avatar.url : ''
-              }
-            })
+      .then(message => {
+        Chat
+          .findById(messageData.chatId)
+          .then(chat => {
+            chat.lastMessage = message._id
+            return chat.save()
+          })
+          .then(() => {
+            User
+              .findById(messageData.authorId)
+              .then(user => {
+                resolve(generateMessagesObject(message, user))
+              })
           })
       })
       .catch(error => reject(error))
   })
 }
 
-function getMessages (message, authorId, chatId) {
-
+function getMessages (chatId) {
+  return new Promise((resolve, reject) => {
+    Message
+      .find({ chatId })
+      .populate('authorId')
+      .then((messages) => {
+        const filterMessages = messages.map(message => generateMessagesObject(message, message.authorId))
+        resolve(filterMessages)
+      })
+      .catch(error => reject(error))
+  })
 }
 
-function deleteMessages (message, authorId, chatId) {
+function generateMessagesObject (message, user) {
+  return {
+    _id: message.id,
+    message: message.message,
+    date: message.createdAt,
+    selected: false,
+    user: {
+      _id: user._id,
+      username: user.username,
+      avatar: user.avatar && user.avatar.url ? user.avatar.url : '',
+      selected: false
+    }
+  }
+}
 
+function deleteMessages (messageData, chatId) {
+  return new Promise((resolve, reject) => {
+    Message
+      .deleteMany({ _id: messageData })
+      .then(() => {
+        Chat
+          .findById(chatId)
+          .then(chat => {
+            if (chat.lastMessage && messageData.includes(chat.lastMessage.toString())) {
+              // TODO: search and put last message
+              chat.lastMessage = null
+              return chat.save()
+            }
+            resolve()
+          })
+          .then(() => resolve())
+      })
+      .catch(error => reject(error))
+  })
 }
 
 module.exports = {

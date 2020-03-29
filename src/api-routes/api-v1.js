@@ -9,5 +9,6 @@ const users = require('./users/users')
 const chats = require('./chats/chats')
 const contacts = require('./contacts/contacts')
 const avatars = require('./avatars/avatars')
+const messages = require('./messages/messages')
 
-module.exports = [router, users, chats, contacts, avatars]
+module.exports = [router, users, chats, contacts, avatars, messages]

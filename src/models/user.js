@@ -18,7 +18,10 @@ const userSchema = new mongoose.Schema({
   },
   chats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }],
   avatar: {
-    url: String,
+    url: {
+      type: String,
+      default: null
+    },
     dataId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File'
