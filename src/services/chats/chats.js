@@ -28,7 +28,9 @@ function getChats (userId) {
         }]
       })
       .then(data => {
-        resolve(data.chats.map(chat => pick(chat, publicChatFields)))
+        normalizeDialog(data.chats)
+          .then(data => resolve(data))
+          .catch(err => reject(err))
       })
       .catch(err => reject(err.message))
   })
@@ -40,7 +42,9 @@ function getChatById (chatId) {
       .populate({ path: 'users' })
       .populate({ path: 'avatar.chatId' })
       .then(data => {
-        resolve(pick(data, publicChatFields))
+        normalizeDialog(data)
+          .then(chat => resolve(chat))
+          .then(err => reject(err))
       })
       .catch(err => reject(err.message))
   })
@@ -56,10 +60,9 @@ function createChat (author, chatData) {
           currentUser.chats.find(chat => chat.chatType === DIALOG &&
             (chat.users.find(user => user.toString() === chatData.users[0].toString())))
         if (chatExist) {
-          return resolve({
-            message: 'Chat already exist!',
-            chat: pick(chatExist, publicChatFields)
-          })
+          normalizeDialog(chatExist)
+            .then(chat => resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) }))
+            .catch(err => reject(err))
         }
         if (chatData.chatType === DIALOG) {
           chatData.chatName = uuid.v4()
@@ -74,16 +77,51 @@ function createChat (author, chatData) {
               .then(async () => {
                 currentUser.chats.push(data._id)
                 await currentUser.save()
-                resolve({
-                  message: 'New chat!',
-                  chat: pick(data, publicChatFields)
-                })
+                normalizeDialog(data)
+                  .then(chat => {
+                    resolve({
+                      message: 'New chat!',
+                      chat: chat
+                    })
+                  })
               })
           })
           .catch(reject)
       })
       .catch(reject)
   })
+}
+
+async function normalizeDialog (data, currentUserId) {
+  return new Promise((resolve, reject) => {
+    if (Array.isArray(data)) {
+      Promise.all(data.map(chat => {
+        const recipient = chat.users.find(userId => userId !== currentUserId)
+        return normalizeRecipient(chat, recipient)
+      }))
+        .then(data => resolve(data))
+        .catch(err => reject(err))
+    } else {
+      const recipient = data.users.find(userId => userId !== currentUserId)
+      normalizeRecipient(data, recipient)
+        .then(chat => resolve(chat))
+        .catch(reject)
+    }
+  })
+}
+
+function normalizeRecipient (data, recipient) {
+  return User.findById(recipient._id)
+    .then(user => {
+      if (data.chatType === DIALOG) {
+        const newData = Object.assign({ recipientId: recipient._id }, pick(data, publicChatFields))
+        newData.recipientId = recipient._id
+        newData.chatName = user.username
+        newData.avatar = user.avatar
+        return newData
+      }
+      return pick(data, publicChatFields)
+    })
 }
 
 function updateAllUsersInChat (users, chatId) {
