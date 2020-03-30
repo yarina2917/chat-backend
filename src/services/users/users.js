@@ -2,13 +2,15 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 
+const usersFields = ['_id', 'username', 'avatar.url']
+
 const User = require('../../models/user')
 
 function createUser (userData) {
   return new Promise((resolve, reject) => {
     const user = new User(userData)
     user.save()
-      .then(data => resolve(pick(data, ['_id', 'apiKey'])))
+      .then(data => resolve(pick(data, ['_id', 'apiKey', 'username'])))
       .catch(error => reject(error.message.includes('duplicate') ? createError(400, 'Username is already used') : error))
   })
 }
@@ -52,8 +54,8 @@ function getUser (id) {
   return new Promise((resolve, reject) => {
     User
       .findById(id)
-      .populate('avatar')
-      .then(data => resolve(data))
+      .populate('avatar.dataId')
+      .then(data => resolve(pick(data, usersFields)))
       .catch(error => reject(error))
   })
 }
@@ -64,5 +66,5 @@ module.exports = {
   createUser,
   loginUser,
   logoutUser,
-  updateUser,
+  updateUser
 }

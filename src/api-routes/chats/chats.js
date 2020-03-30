@@ -10,9 +10,7 @@ const chatService = require('../../services/chats/chats')
 // TODO ADD AUTHOR middleware
 router.get('/chats', authentication.apiKey, (req, res, next) => {
   chatService.getChats(req.user._id)
-    .then(data => {
-      res.status(200).send(data)
-    })
+    .then(data => res.status(200).send(data))
     .catch(next)
 })
 

@@ -5,11 +5,14 @@ const compression = require('compression')
 const createError = require('http-errors')
 
 const { validateError } = require('./validators/validate-error-handler')
+const socketConnect = require('./services/sockets/sockets')
 
 const config = require('./config/config')
 const apiV1 = require('./api-routes/api-v1')
 
 const app = express()
+const http = require('http').createServer(app)
+const io = require('socket.io')(http)
 
 require('dotenv').config()
 
@@ -26,10 +29,12 @@ require('./loaders/datastore')
 
     app.use(validateError)
 
-    app.listen(config.port, () => {
+    io.on('connection', socket => {
+      socketConnect(socket)
+    })
+
+    http.listen(config.port, () => {
       console.log(`Server works on port ${config.port}`)
     })
   })
   .catch(console.error)
-
-module.exports = app

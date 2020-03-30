@@ -1,8 +1,9 @@
 class HttpError extends Error {
   constructor (message = 'Invalid request', status = 400) {
-    super (message)
+    super(message)
     this.status = status
   }
+
   toJson () {
     return {
       status: this.status,

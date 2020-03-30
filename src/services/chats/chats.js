@@ -2,8 +2,8 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 
-const publicChatFields = ['_id', 'chatName', 'chatType', 'avatar', 'author', 'users', 'lastMessage', 'createdAt']
-const publicChatUsersFields = ['_id', 'username', 'avatar']
+const publicChatFields = ['_id', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
+const mainChatFields = ['_id', 'chatName', 'chatType', 'avatar', 'users', 'admins']
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
@@ -16,12 +16,20 @@ function getChats (userId) {
     User.findById(userId)
       .populate({
         path: 'chats',
-        populate: {
+        populate: [{
           path: 'users',
           select: ['username']
-        }
+        }, {
+          path: 'lastMessage',
+          populate: {
+            path: 'authorId',
+            select: ['username']
+          }
+        }]
       })
-      .then(data => resolve(data.chats.map(chat => pick(chat, publicChatFields))))
+      .then(data => {
+        resolve(data.chats.map(chat => pick(chat, publicChatFields)))
+      })
       .catch(err => reject(err.message))
   })
 }
@@ -30,8 +38,10 @@ function getChatById (chatId) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
       .populate({ path: 'users' })
-      .populate({ path: 'avatar' })
-      .then(data => resolve(pick(data, publicChatFields)))
+      .populate({ path: 'avatar.chatId' })
+      .then(data => {
+        resolve(pick(data, publicChatFields))
+      })
       .catch(err => reject(err.message))
   })
 }
@@ -57,6 +67,7 @@ function createChat (author, chatData) {
         const chat = new Chat(chatData)
         chat.author = author
         chat.users.push(author)
+        chat.admins.push(author)
         chat.save()
           .then(async data => {
             updateAllUsersInChat(chatData.users, data._id)

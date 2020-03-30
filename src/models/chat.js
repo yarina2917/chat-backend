@@ -14,14 +14,20 @@ const chatSchema = new mongoose.Schema({
     required: true,
     enum: { values: chatTypes }
   },
-  lastMessage: {
-    type: String,
-    required: false,
-    default: ''
-  },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
-  users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  avatar: {
+    url: {
+      type: String,
+      default: null
+    },
+    dataId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'File'
+    }
+  },
+  users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message', default: null },
+  admins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: {
     createdAt: 'createdAt',

@@ -17,11 +17,17 @@ const userSchema = new mongoose.Schema({
     default: uuid.v4
   },
   chats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }],
-  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
-  contacts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }]
+  avatar: {
+    url: {
+      type: String,
+      default: null
+    },
+    dataId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'File'
+    }
+  },
+  contacts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: {
     createdAt: 'createdAt',
