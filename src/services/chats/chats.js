@@ -36,12 +36,12 @@ function getChats (userId) {
   })
 }
 
-function getChatsId(userId) {
-    return new Promise((resolve, reject) => {
-        User.findById(userId)
-            .then(data => resolve(data.chats))
-            .catch(err => reject(err))
-    })
+function getChatsId (userId) {
+  return new Promise((resolve, reject) => {
+    User.findById(userId)
+      .then(data => resolve(data.chats))
+      .catch(err => reject(err))
+  })
 }
 
 function getChatById (chatId) {

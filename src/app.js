@@ -30,7 +30,7 @@ require('./loaders/datastore')
     app.use(validateError)
 
     io.on('connection', socket => {
-      socketConnect(socket)
+      socketConnect(socket, io, socket.handshake.query.userId)
     })
 
     http.listen(config.port, () => {
