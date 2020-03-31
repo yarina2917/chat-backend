@@ -1,8 +1,33 @@
 const messagesService = require('../messages/messages')
+const chatsService = require('../chats/chats')
+let user
 
 function socketConnect (socket) {
+
+    socket.on('join-chats', userId => {
+        user = userId
+        console.log('user joined', user)
+        chatsService.getChatsId(userId)
+          .then(chats => {
+              chats.forEach(chat => {
+                  console.log('join', chat)
+                  socket.join(chat)
+              })
+          })
+            .catch(err => console.log('err', err))
+
+    })
+
   socket.on('disconnect', () => {
-    console.log('user disconnected')
+      console.log('user disconnected', user)
+      chatsService.getChatsId(user)
+          .then(chats => {
+              chats.forEach(chat => {
+                  console.log('leave', chat)
+                  socket.leave(chat)
+              })
+          })
+          .catch(err => console.log('err', err))
   })
 
   socket.on('typing', user => {
@@ -16,9 +41,9 @@ function socketConnect (socket) {
   socket.on('message', messageData => {
     messagesService.saveMessage(messageData)
       .then(data => {
-        // TODO: replace with room io.in('chat').emit()
-        socket.emit('notifyMessage', data)
-        socket.broadcast.emit('notifyMessage', data)
+        socket.in(messageData.chatId).emit('notifyMessage', data)
+        // socket.emit('notifyMessage', data)
+        // socket.broadcast.emit('notifyMessage', data)
         socket.broadcast.emit('notifyStopTyping', data.user.username)
       })
       .catch(err => console.log(err))
