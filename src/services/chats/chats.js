@@ -135,13 +135,14 @@ function normalizeRecipient (data, recipient) {
 function updateAllUsersInChat (users, chatId) {
   return Promise.all(users.map(user => {
     return User.findById(user)
-      .then(currentUser => {
+      .then(async currentUser => {
         if (!currentUser.chats) {
           currentUser = []
         }
         if (!currentUser.chats.indexOf(chatId) > -1) {
           currentUser.chats.push(chatId)
-          return currentUser.save()
+          const savedUser = await currentUser.save()
+          return savedUser
         }
       })
   }))
@@ -164,10 +165,37 @@ function addMembers (chatId, users) {
             chat.users.push(userId)
           }
         })
-        await updateAllUsersInChat(users, chatId)
-        return resolve(chat.save())
+        updateAllUsersInChat(users, chatId)
+          .then(async users => {
+            await chat.save()
+            resolve(users)
+          })
       })
       .catch(error => reject(error.message))
+  })
+}
+
+function removeMember (chatId, userId) {
+  return new Promise((resolve, reject) => {
+    Chat.findById(chatId)
+      .then(async chat => {
+        const position = chat.users.indexOf(userId)
+        if (position > -1) {
+          chat.users.splice(position, 1)
+          await chat.save()
+          User.findById(userId)
+            .then(async user => {
+              const userPosition = user.chats.indexOf(chatId)
+              user.chats.splice(userPosition, 1)
+              await user.save()
+              resolve({ userId: userId, chatId: chatId })
+            })
+            .catch(reject)
+        } else {
+          reject(new Error('The user was not found!'))
+        }
+      })
+      .catch(reject)
   })
 }
 
@@ -177,5 +205,6 @@ module.exports = {
   getChatsId,
   createChat,
   updateChat,
-  addMembers
+  addMembers,
+  removeMember
 }
