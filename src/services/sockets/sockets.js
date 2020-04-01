@@ -1,25 +1,39 @@
 const messagesService = require('../messages/messages')
+const chatsService = require('../chats/chats')
 
-function socketConnect (socket) {
+function socketConnect (socket, io, userId) {
+
+  chatsService.getChatsId(userId)
+    .then(chats => {
+      chats.forEach(chat => {
+        console.log('JOIN to chat', chat)
+        socket.join(chat)
+      })
+    })
+    .catch(err => console.log('err', err))
+
   socket.on('disconnect', () => {
-    console.log('user disconnected')
+    console.log('user disconnected', userId)
+    chatsService.getChatsId(userId)
+      .then(chats => {
+        chats.forEach(chat => socket.leave(chat))
+      })
+      .catch(err => console.log('err', err))
   })
 
-  socket.on('typing', user => {
-    socket.broadcast.emit('notifyTyping', user)
+  socket.on('typing', data => {
+    socket.in(data.chatId).emit('notifyTyping', data.username)
   })
 
-  socket.on('stopTyping', user => {
-    socket.broadcast.emit('notifyStopTyping', user)
+  socket.on('stopTyping', data => {
+    socket.in(data.chatId).emit('notifyStopTyping', data.username)
   })
 
   socket.on('message', messageData => {
     messagesService.saveMessage(messageData)
       .then(data => {
-        // TODO: replace with room io.in('chat').emit()
-        socket.emit('notifyMessage', data)
-        socket.broadcast.emit('notifyMessage', data)
-        socket.broadcast.emit('notifyStopTyping', data.user.username)
+        socket.in(messageData.chatId).emit('notifyStopTyping', data.user.username)
+        io.in(messageData.chatId).emit('notifyMessage', data)
       })
       .catch(err => console.log(err))
   })
@@ -27,9 +41,23 @@ function socketConnect (socket) {
   socket.on('deleteMessages', data => {
     messagesService.deleteMessages(data.messages, data.chatId)
       .then(() => {
-        // TODO: replace with room io.in('chat').emit()
-        socket.emit('notifyDeleteMessage', data.messages)
-        socket.broadcast.emit('notifyDeleteMessage', data.messages)
+        io.in(data.chatId).emit('notifyDeleteMessage', data.messages)
+      })
+      .catch(err => console.log(err))
+  })
+
+  socket.on('add-members', data => {
+    chatsService.addMembers(data.chatId, data.users)
+      .then((users) => {
+        io.in(data.chatId).emit('notify-add-members', users)
+      })
+      .catch(err => console.log(err))
+  })
+
+  socket.on('remove-members', data => {
+    chatsService.removeMember(data.chatId, data.userId)
+      .then(res => {
+        io.in(data.chatId).emit('notify-remove-members', res)
       })
       .catch(err => console.log(err))
   })

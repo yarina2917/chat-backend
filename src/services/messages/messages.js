@@ -63,9 +63,13 @@ function deleteMessages (messageData, chatId) {
           .findById(chatId)
           .then(chat => {
             if (chat.lastMessage && messageData.includes(chat.lastMessage.toString())) {
-              // TODO: search and put last message
-              chat.lastMessage = null
-              return chat.save()
+              Message
+                .find({ chatId })
+                .sort({ _id: -1 }).limit(1)
+                .then((data) => {
+                  chat.lastMessage = data[0] || null
+                  return chat.save()
+                })
             }
             resolve()
           })
