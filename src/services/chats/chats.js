@@ -135,14 +135,13 @@ function normalizeRecipient (data, recipient) {
 function updateAllUsersInChat (users, chatId) {
   return Promise.all(users.map(user => {
     return User.findById(user)
-      .then(async currentUser => {
+      .then(currentUser => {
         if (!currentUser.chats) {
           currentUser = []
         }
         if (!currentUser.chats.indexOf(chatId) > -1) {
           currentUser.chats.push(chatId)
-          const savedUser = await currentUser.save()
-          return savedUser
+          return currentUser.save()
         }
       })
   }))
@@ -192,7 +191,7 @@ function removeMember (chatId, userId) {
             })
             .catch(reject)
         } else {
-          reject(new Error('The user was not found!'))
+          reject(createError(404, 'The user was not found!'))
         }
       })
       .catch(reject)
