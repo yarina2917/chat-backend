@@ -1,8 +1,8 @@
 const messagesService = require('../messages/messages')
 const chatsService = require('../chats/chats')
-let user
 
 function socketConnect (socket, io, userId) {
+
   chatsService.getChatsId(userId)
     .then(chats => {
       chats.forEach(chat => {
@@ -13,31 +13,27 @@ function socketConnect (socket, io, userId) {
     .catch(err => console.log('err', err))
 
   socket.on('disconnect', () => {
-    console.log('user disconnected', user)
-    chatsService.getChatsId(user)
+    console.log('user disconnected', userId)
+    chatsService.getChatsId(userId)
       .then(chats => {
-        chats.forEach(chat => {
-          socket.leave(chat)
-        })
+        chats.forEach(chat => socket.leave(chat))
       })
       .catch(err => console.log('err', err))
   })
 
-  socket.on('typing', user => {
-    socket.broadcast.emit('notifyTyping', user)
+  socket.on('typing', data => {
+    socket.in(data.chatId).emit('notifyTyping', data.username)
   })
 
-  socket.on('stopTyping', user => {
-    socket.broadcast.emit('notifyStopTyping', user)
+  socket.on('stopTyping', data => {
+    socket.in(data.chatId).emit('notifyStopTyping', data.username)
   })
 
   socket.on('message', messageData => {
     messagesService.saveMessage(messageData)
       .then(data => {
+        socket.in(messageData.chatId).emit('notifyStopTyping', data.user.username)
         socket.in(messageData.chatId).emit('notifyMessage', data)
-        // socket.to(messageData.chatId).emit('notifyMessage', data)
-        // socket.broadcast.to(messageData.chatId).emit('notifyMessage', data)
-        // socket.broadcast.emit('notifyStopTyping', data.user.username)
       })
       .catch(err => console.log(err))
   })
@@ -45,9 +41,7 @@ function socketConnect (socket, io, userId) {
   socket.on('deleteMessages', data => {
     messagesService.deleteMessages(data.messages, data.chatId)
       .then(() => {
-        // TODO: replace with room io.in('chat').emit()
-        socket.emit('notifyDeleteMessage', data.messages)
-        socket.broadcast.emit('notifyDeleteMessage', data.messages)
+        socket.in(data.chatId).emit('notifyDeleteMessage', data.messages)
       })
       .catch(err => console.log(err))
   })
