@@ -45,6 +45,22 @@ function socketConnect (socket, io, userId) {
       })
       .catch(err => console.log(err))
   })
+
+  socket.on('add-members', data => {
+    chatsService.addMembers(data.chatId, data.users)
+      .then((users) => {
+        io.in(data.chatId).emit('notify-add-members', users)
+      })
+      .catch(err => console.log(err))
+  })
+
+  socket.on('remove-members', data => {
+    chatsService.removeMember(data.chatId, data.userId)
+      .then(res => {
+        io.in(data.chatId).emit('notify-remove-members', res)
+      })
+      .catch(err => console.log(err))
+  })
 }
 
 module.exports = socketConnect
