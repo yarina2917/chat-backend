@@ -33,7 +33,7 @@ function socketConnect (socket, io, userId) {
     messagesService.saveMessage(messageData)
       .then(data => {
         socket.in(messageData.chatId).emit('notifyStopTyping', data.user.username)
-        socket.in(messageData.chatId).emit('notifyMessage', data)
+        io.in(messageData.chatId).emit('notifyMessage', data)
       })
       .catch(err => console.log(err))
   })
@@ -41,7 +41,7 @@ function socketConnect (socket, io, userId) {
   socket.on('deleteMessages', data => {
     messagesService.deleteMessages(data.messages, data.chatId)
       .then(() => {
-        socket.in(data.chatId).emit('notifyDeleteMessage', data.messages)
+        io.in(data.chatId).emit('notifyDeleteMessage', data.messages)
       })
       .catch(err => console.log(err))
   })
