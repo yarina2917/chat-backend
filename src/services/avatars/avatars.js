@@ -8,6 +8,11 @@ const File = require('../../models/file')
 
 const { PROFILE } = require('../../config/chat-types')
 
+let io
+function importIO (importIO) {
+  io = importIO
+}
+
 function updateAvatar (id, imageBuffer, originalName, type) {
   return new Promise((resolve, reject) => {
     const model = type === PROFILE ? User : Chat
@@ -45,6 +50,10 @@ function updateAvatar (id, imageBuffer, originalName, type) {
               url: file.publicUrl
             }
             await user.save()
+            // TODO: think about updating profile avatar
+            if (type !== PROFILE) {
+              io.in(id).emit('notify-update-avatar', { chatId: id, url: file.publicUrl })
+            }
             return newFile
           })
       })
@@ -68,6 +77,10 @@ function deleteAvatar (id, type) {
             user.avatar = {
               url: null
             }
+            // TODO: think about updating profile avatar
+            if (type !== PROFILE) {
+              io.in(id).emit('notify-update-avatar', { chatId: id, url: null })
+            }
             return user.save()
           })
           .catch(err => reject(err))
@@ -79,5 +92,6 @@ function deleteAvatar (id, type) {
 
 module.exports = {
   updateAvatar,
-  deleteAvatar
+  deleteAvatar,
+  importIO
 }

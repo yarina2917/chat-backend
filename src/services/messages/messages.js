@@ -34,6 +34,7 @@ function getMessages (chatId) {
     Message
       .find({ chatId })
       .populate('authorId')
+      .sort({ createdAt: -1 })
       .then((messages) => resolve(messages.map(message => generateMessagesObject(message, message.authorId))))
       .catch(error => reject(error))
   })
@@ -45,6 +46,7 @@ function generateMessagesObject (message, user) {
     message: message.message,
     date: message.createdAt,
     selected: false,
+    chatId: message.chatId,
     user: {
       _id: user._id,
       username: user.username,
