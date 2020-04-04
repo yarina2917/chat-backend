@@ -20,12 +20,6 @@ router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
     .catch(err => next(err))
 })
 
-router.post('/chats/:id/add-members', authentication.apiKey, (req, res, next) => {
-  chatService.addMembers(req.params.id, req.body.users)
-    .then(data => res.status(200).send(data))
-    .catch(next)
-})
-
 router.post('/chats', validate(validator.createChat), authentication.apiKey, (req, res, next) => {
   chatService.createChat(req.user._id, req.body)
     .then(data => res.status(200).send(data))

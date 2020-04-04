@@ -29,7 +29,8 @@ function saveMessage (messageData) {
   })
 }
 
-function getMessages (chatId, lastMessage) {
+function getMessages (chatId) {
+  console.log('getMessages', chatId)
   return new Promise((resolve, reject) => {
     Message
       .find({ chatId })
@@ -43,6 +44,7 @@ function getMessages (chatId, lastMessage) {
 }
 
 function generateMessagesObject (message, user) {
+  console.log('!generateMessagesObject')
   return {
     _id: message.id,
     message: message.message,
