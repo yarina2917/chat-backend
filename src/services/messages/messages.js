@@ -30,21 +30,17 @@ function saveMessage (messageData) {
 }
 
 function getMessages (chatId) {
-  console.log('getMessages', chatId)
   return new Promise((resolve, reject) => {
     Message
       .find({ chatId })
       .populate('authorId')
       .sort({ createdAt: -1 })
-      .then((messages) => {
-        resolve(messages.map(message => generateMessagesObject(message, message.authorId)))
-      })
+      .then((messages) => resolve(messages.map(message => generateMessagesObject(message, message.authorId))))
       .catch(error => reject(error))
   })
 }
 
 function generateMessagesObject (message, user) {
-  console.log('!generateMessagesObject')
   return {
     _id: message.id,
     message: message.message,
