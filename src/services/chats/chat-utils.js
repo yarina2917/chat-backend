@@ -38,17 +38,20 @@ function normalizeRecipient (data, recipient) {
     })
 }
 
-function updateAllUsersInChat (users, chatId) {
+function updateAllUsersInChat (users, chatId, action) {
   return Promise.all(users.map(user => {
     return User.findById(user)
       .then(currentUser => {
         if (!currentUser.chats) {
           currentUser = []
         }
-        if (!currentUser.chats.indexOf(chatId) > -1) {
+        const index = currentUser.chats.indexOf(chatId);
+        if (action === 'add' && index === -1) {
           currentUser.chats.push(chatId)
-          return currentUser.save()
+        } else if (action === 'delete' && index > -1) {
+          currentUser.chats.splice(index, 1)
         }
+        return currentUser.save()
       })
   }))
 }

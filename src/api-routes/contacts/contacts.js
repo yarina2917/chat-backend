@@ -6,23 +6,23 @@ const authentication = require('../../services/passport/authentificate-midleware
 const contactsService = require('../../services/contacts/contacts')
 
 router.get('/contacts/:id', authentication.apiKey, (req, res) => {
-  res.status(200).send({ data: !!res.req.user.contacts.includes(req.params.id) })
+  res.status(200).send({ data: !!req.user.contacts.includes(req.params.id) })
 })
 
 router.get('/contacts', authentication.apiKey, (req, res, next) => {
-  contactsService.getContacts(req.headers['x-api-key'])
+  contactsService.getContacts(req.user._id)
     .then(data => res.status(200).send(data))
     .catch(next)
 })
 
 router.post('/contacts/:username', authentication.apiKey, (req, res, next) => {
-  contactsService.addContact(req.headers['x-api-key'], req.params.username)
+  contactsService.addContact(req.user._id, req.params.username)
     .then(data => res.status(200).send(data))
     .catch(next)
 })
 
 router.delete('/contacts/:id', authentication.apiKey, (req, res, next) => {
-  contactsService.deleteContact(req.headers['x-api-key'], req.params.id)
+  contactsService.deleteContacts(req.user._id, req.params.id)
     .then(data => res.status(200).send(data))
     .catch(next)
 })

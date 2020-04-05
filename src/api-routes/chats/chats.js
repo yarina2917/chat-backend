@@ -15,7 +15,7 @@ router.get('/chats', authentication.apiKey, (req, res, next) => {
 })
 
 router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
-  chatService.getChatById(req.params.id)
+  chatService.getChatById(req.params.id, req.user._id)
     .then(data => res.status(200).send(data))
     .catch(err => next(err))
 })
@@ -28,6 +28,13 @@ router.post('/chats', validate(validator.createChat), authentication.apiKey, (re
 
 router.put('/chats/:id', validate(validator.updateChat), authentication.apiKey, (req, res, next) => {
   chatService.updateChat(req.params.id, req.body)
+    .then(data => res.status(200).send(data))
+    .catch(next)
+})
+
+// TODO: add validator for admin role
+router.delete('/chats/:id', authentication.apiKey, (req, res, next) => {
+  chatService.deleteChannel(req.params.id)
     .then(data => res.status(200).send(data))
     .catch(next)
 })

@@ -9,6 +9,7 @@ const mainChatFields = ['_id', 'chatName', 'chatType', 'avatar', 'users', 'admin
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
+const Message = require('../../models/message')
 
 const { DIALOG } = require('../../config/chat-types')
 
@@ -35,7 +36,7 @@ function getChats (userId) {
         }]
       })
       .then(data => {
-        normalizeDialog(data.chats)
+        normalizeDialog(data.chats, userId)
           .then(data => resolve(data))
           .catch(err => reject(err))
       })
@@ -51,13 +52,13 @@ function getChatsId (userId) {
   })
 }
 
-function getChatById (chatId) {
+function getChatById (chatId, userId) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
       .populate({ path: 'users' })
       .populate({ path: 'avatar.chatId' })
       .then(data => {
-        normalizeDialog(data)
+        normalizeDialog(data, userId)
           .then(chat => resolve(chat))
           .then(err => reject(err))
       })
@@ -75,7 +76,7 @@ function createChat (author, chatData) {
           currentUser.chats.find(chat => chat.chatType === DIALOG &&
             (chat.users.find(user => user.toString() === chatData.users[0].toString())))
         if (chatExist) {
-          normalizeDialog(chatExist)
+          normalizeDialog(chatExist, author)
             .then(chat => resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) }))
             .catch(err => reject(err))
         }
@@ -88,11 +89,11 @@ function createChat (author, chatData) {
         chat.admins.push(author)
         chat.save()
           .then(async data => {
-            updateAllUsersInChat(chatData.users, data._id)
+            updateAllUsersInChat(chatData.users, data._id, 'add')
               .then(async () => {
                 currentUser.chats.push(data._id)
                 await currentUser.save()
-                normalizeDialog(data)
+                normalizeDialog(data, author)
                   .then(chat => {
                     joinChat(chat)
                     resolve({ message: 'New chat!', chat })
@@ -127,11 +128,33 @@ function updateChat (id, chatData) {
   })
 }
 
+function deleteChannel(chatId) {
+  return new Promise((resolve, reject) => {
+    Chat
+      .findById(chatId)
+      .then(chat => {
+        updateAllUsersInChat(chat.users, chatId, 'delete')
+          .then(() => chat.remove())
+          .then(() => {
+            Message
+              .deleteMany({ chatId })
+              .then(() => {
+                io.in(chatId).emit('notify-delete-chat', { chatId })
+                resolve()
+              })
+          })
+      })
+      .catch(err => reject(err))
+  })
+}
+
+
 module.exports = {
   importIO,
   getChats,
   getChatById,
   getChatsId,
   createChat,
-  updateChat
+  updateChat,
+  deleteChannel
 }

@@ -2,6 +2,7 @@ const createError = require('http-errors')
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
+const Message = require('../../models/message')
 
 const { updateAllUsersInChat } = require('./chat-utils')
 
@@ -21,7 +22,7 @@ function addMembers (chatId, users) {
             chat.users.push(userId)
           }
         })
-        updateAllUsersInChat(users, chatId)
+        updateAllUsersInChat(users, chatId, 'add')
           .then(async users => {
             await chat.save()
             resolve({ users, chat })
@@ -38,13 +39,25 @@ function removeMember (chatId, userId) {
         const position = chat.users.indexOf(userId)
         if (position > -1) {
           chat.users.splice(position, 1)
-          !chat.users.length ? await chat.remove() : await chat.save()
-          User.findById(userId)
-            .then(async user => {
-              const userPosition = user.chats.indexOf(chatId)
-              user.chats.splice(userPosition, 1)
-              await user.save()
-              resolve({ userId, chatId })
+          let promise
+          if (!chat.users.length) {
+            promise =
+              Message
+                .deleteMany({ chatId })
+                .then(() => chat.remove())
+                .catch(reject)
+          } else {
+            promise = chat.save()
+          }
+          promise
+            .then(() => {
+              User.findById(userId)
+                .then(async user => {
+                  const userPosition = user.chats.indexOf(chatId)
+                  user.chats.splice(userPosition, 1)
+                  await user.save()
+                  resolve({ userId, chatId })
+                })
             })
             .catch(reject)
         } else {
