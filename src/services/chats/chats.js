@@ -90,8 +90,17 @@ function getChats (userId) {
       .then(data => {
         normalizeDialog(data.chats, userId)
           .then(data => getLastMessageOfChats(data))
-          .then(data => resolve(data))
-          .catch(err => reject(err))
+          .then(data => {
+            resolve(data.sort((a, b) => {
+              return (a.lastMessage && b.lastMessage)
+                ? a.lastMessage.createdAt > b.lastMessage.createdAt ? -1 : a.lastMessage.createdAt < b.lastMessage.createdAt ? 1 : 0
+                : a.createdAt > b.createdAt ? -1 : a.createdAt < b.createdAt ? 1 : 0
+            }))
+          })
+          .catch(err => {
+            console.log('@@@@@')
+            reject(err)
+          })
       })
       .catch(err => reject(err.message))
   })
@@ -143,6 +152,7 @@ function createChat (author, chatData) {
         chat.admins.push(author)
         chat.save()
           .then(async data => {
+            await new Message({ chatId: data._id, authorId: author, message: `New chat was created by ${currentUser.username}` }).save()
             updateAllUsersInChat(chatData.users, data._id, 'add')
               .then(async () => {
                 currentUser.chats.push(data._id)
