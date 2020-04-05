@@ -8,14 +8,20 @@ const { validate } = require('../../validators/validate-middleware')
 const chatService = require('../../services/chats/chats')
 
 // TODO ADD AUTHOR middleware
+// router.get('/chats', authentication.apiKey, (req, res, next) => {
+//   chatService.getChats(req.user._id)
+//     .then(data => res.status(200).send(data))
+//     .catch(next)
+// })
+
 router.get('/chats', authentication.apiKey, (req, res, next) => {
-  chatService.getChats(req.user._id)
+  chatService.getChats(req.user._id.toString())
     .then(data => res.status(200).send(data))
     .catch(next)
 })
 
 router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
-  chatService.getChatById(req.params.id)
+  chatService.getChatById(req.params.id, req.user._id.toString())
     .then(data => res.status(200).send(data))
     .catch(err => next(err))
 })

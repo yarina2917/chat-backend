@@ -3,12 +3,13 @@ const pick = require('lodash/pick')
 const createError = require('http-errors')
 
 const { normalizeDialog, updateAllUsersInChat } = require('./chat-utils')
-
+const ObjectId = require('mongoose').Types.ObjectId
 const publicChatFields = ['_id', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
 const mainChatFields = ['_id', 'chatName', 'chatType', 'avatar', 'users', 'admins']
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
+const Message = require('../../models/message')
 
 const { DIALOG } = require('../../config/chat-types')
 
@@ -17,8 +18,68 @@ function importIO (importIO) {
   io = importIO
 }
 
-// TODO add filters, search
 function getChats (userId) {
+  // TODO optimize with
+  // return new Promise((resolve, reject) => {
+  //   Message.aggregate(
+  //     [
+  //       // Matching pipeline, similar to find
+  //       {
+  //         '$match': {
+  //           'chatId': { "$in": user.chats }
+  //         }
+  //       },
+  //       // Grouping pipeline
+  //       {
+  //         '$group': {
+  //           '_id': '$chatId',
+  //           'chatId': {
+  //             '$first': '$chatId'
+  //           },
+  //           'lastMessage': {
+  //             '$last': '$_id'
+  //           },
+  //           'createdAt': {
+  //             '$first': '$createdAt'
+  //           }
+  //         }
+  //       },
+  //       // Sorting pipeline
+  //       {
+  //         '$sort': {
+  //           'createdAt': -1
+  //         }
+  //       },
+  //       // Project pipeline, similar to select
+  //       {
+  //         '$project': {
+  //           '_id': 0,
+  //           'chatId': '$_id',
+  //           'lastMessage': 1,
+  //           'createdAt': 1
+  //         }
+  //       }
+  //     ],
+  //     function (err, messages) {
+  //       // Result is an array of documents
+  //       if (err) {
+  //         console.log('err231231231', err)
+  //       } else {
+  //         Message.populate(messages, [
+  //           {
+  //             path: 'lastMessage',
+  //             populate: {
+  //               path: 'authorId',
+  //               select: ['avatar', 'createdAt', 'authotId', 'username']
+  //             },
+  //             select: ['chatId', 'createdAt', 'message']
+  //           },
+  //           { path: 'chatId' }]
+  //         ).then(result => resolve(result.filter(chat => chat.chatId)))
+  //       }
+  //     }
+  //   )
+  // })
   return new Promise((resolve, reject) => {
     User.findById(userId)
       .populate({
@@ -26,21 +87,39 @@ function getChats (userId) {
         populate: [{
           path: 'users',
           select: ['username']
-        }, {
-          path: 'lastMessage',
-          populate: {
-            path: 'authorId',
-            select: ['username']
-          }
         }]
       })
       .then(data => {
-        normalizeDialog(data.chats)
+        normalizeDialog(data.chats, userId)
+          .then(data => getLastMessageOfChats(data))
           .then(data => resolve(data))
           .catch(err => reject(err))
       })
       .catch(err => reject(err.message))
   })
+}
+
+// TODO promise all to aggregation
+function getLastMessageOfChats (chats) {
+  if (Array.isArray(chats)) {
+    return Promise.all(chats.map(chat => {
+      return Message.findOne({ chatId: chat._id })
+        .populate('authorId')
+        .sort({ createdAt: -1 })
+        .then(lastMessage => {
+          chat.lastMessage = lastMessage
+          return chat
+        })
+    }))
+  } else {
+    return Message.findOne({ chatId: chats._id })
+      .populate('authorId')
+      .sort({ createdAt: -1 })
+      .then(lastMessage => {
+        chats.lastMessage = lastMessage
+        return chats
+      })
+  }
 }
 
 function getChatsId (userId) {
@@ -51,13 +130,13 @@ function getChatsId (userId) {
   })
 }
 
-function getChatById (chatId) {
+function getChatById (chatId, userId) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
       .populate({ path: 'users' })
       .populate({ path: 'avatar.chatId' })
       .then(data => {
-        normalizeDialog(data)
+        normalizeDialog(data, userId)
           .then(chat => resolve(chat))
           .then(err => reject(err))
       })
@@ -75,7 +154,7 @@ function createChat (author, chatData) {
           currentUser.chats.find(chat => chat.chatType === DIALOG &&
             (chat.users.find(user => user.toString() === chatData.users[0].toString())))
         if (chatExist) {
-          normalizeDialog(chatExist)
+          normalizeDialog(chatExist, author)
             .then(chat => resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) }))
             .catch(err => reject(err))
         }
@@ -92,7 +171,7 @@ function createChat (author, chatData) {
               .then(async () => {
                 currentUser.chats.push(data._id)
                 await currentUser.save()
-                normalizeDialog(data)
+                normalizeDialog(data, author)
                   .then(chat => {
                     joinChat(chat)
                     resolve({ message: 'New chat!', chat })
@@ -133,5 +212,6 @@ module.exports = {
   getChatById,
   getChatsId,
   createChat,
-  updateChat
+  updateChat,
+  getLastMessageOfChats
 }
