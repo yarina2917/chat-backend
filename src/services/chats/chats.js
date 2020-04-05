@@ -2,10 +2,8 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 
-const { normalizeDialog, updateAllUsersInChat } = require('./chat-utils')
-const ObjectId = require('mongoose').Types.ObjectId
+const { normalizeDialog, updateAllUsersInChat, getLastMessageOfChats } = require('./chat-utils')
 const publicChatFields = ['_id', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
-const mainChatFields = ['_id', 'chatName', 'chatType', 'avatar', 'users', 'admins']
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
@@ -97,29 +95,6 @@ function getChats (userId) {
       })
       .catch(err => reject(err.message))
   })
-}
-
-// TODO promise all to aggregation
-function getLastMessageOfChats (chats) {
-  if (Array.isArray(chats)) {
-    return Promise.all(chats.map(chat => {
-      return Message.findOne({ chatId: chat._id })
-        .populate('authorId')
-        .sort({ createdAt: -1 })
-        .then(lastMessage => {
-          chat.lastMessage = lastMessage
-          return chat
-        })
-    }))
-  } else {
-    return Message.findOne({ chatId: chats._id })
-      .populate('authorId')
-      .sort({ createdAt: -1 })
-      .then(lastMessage => {
-        chats.lastMessage = lastMessage
-        return chats
-      })
-  }
 }
 
 function getChatsId (userId) {
@@ -248,5 +223,4 @@ module.exports = {
   createChat,
   updateChat,
   deleteChannel,
-  getLastMessageOfChats
 }

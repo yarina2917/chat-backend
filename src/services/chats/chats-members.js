@@ -4,27 +4,23 @@ const Chat = require('../../models/chat')
 const User = require('../../models/user')
 const Message = require('../../models/message')
 
-const { updateAllUsersInChat } = require('./chat-utils')
+const { updateAllUsersInChat, getLastMessageOfChats } = require('./chat-utils')
 
 function addMembers (chatId, users) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
-      .populate({
-        path: 'lastMessage',
-        populate: {
-          path: 'authorId',
-          select: ['username']
-        }
-      })
-      .then(async chat => {
+      .then( chat => {
         users.forEach((userId) => {
           if (chat.users.indexOf(userId) <= -1) {
             chat.users.push(userId)
           }
         })
+        return chat.save()
+      })
+      .then(chat => getLastMessageOfChats(chat))
+      .then(chat => {
         updateAllUsersInChat(users, chatId, 'add')
           .then(async users => {
-            await chat.save()
             resolve({ users, chat })
           })
       })

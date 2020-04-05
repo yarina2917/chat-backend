@@ -16,17 +16,10 @@ const chatSchema = new mongoose.Schema({
   },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   avatar: {
-    url: {
-      type: String,
-      default: null
-    },
-    dataId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'File'
-    }
+    url: { type: String, default: null },
+    dataId: { type: mongoose.Schema.Types.ObjectId, ref: 'File'}
   },
   users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message', default: null },
   admins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: {
