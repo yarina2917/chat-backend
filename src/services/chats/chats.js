@@ -82,6 +82,7 @@ function createChat (author, chatData) {
         }
         if (chatData.chatType === DIALOG) {
           chatData.chatName = uuid.v4()
+          await saveContact(chatData.users[0].toString(), author)
         }
         const chat = new Chat(chatData)
         chat.author = author
@@ -93,17 +94,29 @@ function createChat (author, chatData) {
               .then(async () => {
                 currentUser.chats.push(data._id)
                 await currentUser.save()
-                normalizeDialog(data, author)
-                  .then(chat => {
-                    joinChat(chat)
-                    resolve({ message: 'New chat!', chat })
-                  })
+                return normalizeDialog(data, author)
+              })
+              .then(chat => {
+                joinChat(chat)
+                resolve({ message: 'New chat!', chat })
               })
           })
           .catch(reject)
       })
       .catch(reject)
   })
+}
+
+function saveContact(user, newContact) {
+  User
+    .findById(user)
+    .then(contact => {
+      const index = contact.contacts.includes(newContact)
+      if (!index) {
+        contact.contacts.push(newContact)
+      }
+      return contact.save()
+    })
 }
 
 function joinChat (chat) {

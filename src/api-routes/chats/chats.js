@@ -21,7 +21,7 @@ router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
 })
 
 router.post('/chats', validate(validator.createChat), authentication.apiKey, (req, res, next) => {
-  chatService.createChat(req.user._id, req.body)
+  chatService.createChat(req.user._id.toString(), req.body)
     .then(data => res.status(200).send(data))
     .catch(next)
 })

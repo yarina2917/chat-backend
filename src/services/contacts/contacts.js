@@ -55,9 +55,14 @@ function deleteContacts (userId, contactId) {
         users: {$all: [userId, contactId]},
         chatType: DIALOG
       })
-      .then(dialog => {
-        dialogId = dialog._id;
-        return dialog.remove()
+      .then(async dialog => {
+        if (!dialog) {
+          await deleteContact(userId, contactId)
+          resolve({ message: 'Success' })
+        } else {
+          dialogId = dialog._id;
+          return dialog.remove()
+        }
       })
       .then(() => {
         Message
@@ -78,10 +83,12 @@ function deleteContact(userId, contactId, dialogId) {
   User.findById(userId)
     .then(user => {
       user.contacts = user.contacts.filter(id => id.toString() !== contactId.toString())
-      user.chats = user.chats.filter(id => id.toString() !== dialogId.toString())
+      if (dialogId) {
+        user.chats = user.chats.filter(id => id.toString() !== dialogId.toString())
+      }
       return user.save()
     })
-    .catch(error => Promise.reject(error))
+    .catch(error => reject(error))
 }
 
 module.exports = {
