@@ -1,5 +1,6 @@
 const Message = require('../../models/message')
 const User = require('../../models/user')
+const { MESSAGE } = require('../../config/message-types')
 
 function saveMessage (messageData) {
   return new Promise((resolve, reject) => {
@@ -41,6 +42,7 @@ function generateMessagesObject (message, user) {
     date: message.createdAt,
     selected: false,
     chatId: message.chatId,
+    messageType: message.messageType || MESSAGE,
     user: {
       _id: user._id,
       username: user.username,

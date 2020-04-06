@@ -10,6 +10,7 @@ const User = require('../../models/user')
 const Message = require('../../models/message')
 
 const { DIALOG } = require('../../config/chat-types')
+const { REPORT } = require('../../config/message-types')
 
 let io
 function importIO (importIO) {
@@ -152,12 +153,19 @@ function createChat (author, chatData) {
         chat.admins.push(author)
         chat.save()
           .then(async data => {
-            await new Message({ chatId: data._id, authorId: author, message: `New chat was created by ${currentUser.username}` }).save()
+            await new Message({
+              chatId: data._id,
+              authorId: author,
+              message: `New chat was created by ${currentUser.username}`,
+              messageType: REPORT
+            }).save()
             updateAllUsersInChat(chatData.users, data._id, 'add')
               .then(async () => {
                 currentUser.chats.push(data._id)
                 await currentUser.save()
-                return normalizeDialog(data, author)
+                return getLastMessageOfChats(data)
+                  .then(chat => normalizeDialog(chat, author))
+                  .catch(reject)
               })
               .then(chat => {
                 joinChat(chat)
@@ -170,7 +178,7 @@ function createChat (author, chatData) {
   })
 }
 
-function saveContact(user, newContact) {
+function saveContact (user, newContact) {
   User
     .findById(user)
     .then(contact => {
