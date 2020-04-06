@@ -3,7 +3,7 @@ const pick = require('lodash/pick')
 const User = require('../../models/user')
 const Message = require('../../models/message')
 
-const publicChatFields = ['_id', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
+const publicChatFields = ['_id', 'recipientId', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
 
 const { DIALOG } = require('../../config/chat-types')
 
@@ -11,13 +11,17 @@ async function normalizeDialog (data, currentUserId) {
   return new Promise((resolve, reject) => {
     if (Array.isArray(data)) {
       Promise.all(data.map(chat => {
-        const recipient = chat.users.find(userId => userId !== currentUserId)
-        return normalizeRecipient(chat, recipient)
+        if (chat.chatType === DIALOG) {
+          const recipient = chat.users.find(userId => userId.toString() !== currentUserId.toString())
+          return normalizeRecipient(chat, recipient)
+        } else {
+          return pick(chat, publicChatFields)
+        }
       }))
         .then(data => resolve(data))
         .catch(err => reject(err))
     } else {
-      const recipient = data.users.find(userId => userId !== currentUserId)
+      const recipient = data.users.find(userId => (typeof userId === 'string' ? userId : userId._id).toString() !== currentUserId.toString())
       normalizeRecipient(data, recipient)
         .then(chat => resolve(chat))
         .catch(reject)
@@ -28,14 +32,11 @@ async function normalizeDialog (data, currentUserId) {
 function normalizeRecipient (data, recipient) {
   return User.findById(recipient._id)
     .then(user => {
-      if (data.chatType === DIALOG) {
-        const newData = Object.assign({ recipientId: recipient._id }, pick(data, publicChatFields))
-        newData.recipientId = recipient._id
-        newData.chatName = user.username
-        newData.avatar = user.avatar
-        return newData
-      }
-      return pick(data, publicChatFields)
+      const newData = Object.assign({ recipientId: recipient._id }, pick(data, publicChatFields))
+      newData.recipientId = recipient._id
+      newData.chatName = user.username
+      newData.avatar = user.avatar
+      return newData
     })
 }
 

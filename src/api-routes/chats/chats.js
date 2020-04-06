@@ -15,19 +15,19 @@ const chatService = require('../../services/chats/chats')
 // })
 
 router.get('/chats', authentication.apiKey, (req, res, next) => {
-  chatService.getChats(req.user._id.toString())
+  chatService.getChats(req.user._id)
     .then(data => res.status(200).send(data))
     .catch(next)
 })
 
 router.get('/chats/:id', authentication.apiKey, (req, res, next) => {
-  chatService.getChatById(req.params.id, req.user._id.toString())
+  chatService.getChatById(req.params.id, req.user._id)
     .then(data => res.status(200).send(data))
     .catch(err => next(err))
 })
 
 router.post('/chats', validate(validator.createChat), authentication.apiKey, (req, res, next) => {
-  chatService.createChat(req.user._id.toString(), req.body)
+  chatService.createChat(req.user._id, req.body)
     .then(data => res.status(200).send(data))
     .catch(next)
 })
