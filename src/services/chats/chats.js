@@ -120,7 +120,7 @@ function getChatById (chatId, userId) {
           resolve(data)
         }
       })
-      .catch(err => reject(err.message))
+      .catch(err => reject(err))
   })
 }
 
@@ -229,13 +229,10 @@ function deleteChannel (chatId) {
       .then(chat => {
         updateAllUsersInChat(chat.users, chatId, 'delete')
           .then(() => chat.remove())
+          .then(() => Message.deleteMany({ chatId }))
           .then(() => {
-            Message
-              .deleteMany({ chatId })
-              .then(() => {
-                io.in(chatId).emit('notify-delete-chat', { chatId })
-                resolve()
-              })
+            io.in(chatId).emit('notify-delete-chat', { chatId })
+            resolve()
           })
       })
       .catch(err => reject(err))
