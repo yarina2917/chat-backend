@@ -52,7 +52,7 @@ function deleteContacts (userId, contactId) {
     let dialogId
     Chat
       .findOne({
-        users: {$all: [userId, contactId]},
+        users: { $all: [userId, contactId] },
         chatType: DIALOG
       })
       .then(async dialog => {
@@ -60,13 +60,13 @@ function deleteContacts (userId, contactId) {
           await deleteContact(userId, contactId)
           resolve({ message: 'Success' })
         } else {
-          dialogId = dialog._id;
+          dialogId = dialog._id
           return dialog.remove()
         }
       })
       .then(() => {
         Message
-          .deleteMany({ chatId: dialogId})
+          .deleteMany({ chatId: dialogId })
           .then(() => deleteContact(userId, contactId, dialogId))
           .then(() => deleteContact(contactId, userId, dialogId))
           .then(() => {
@@ -79,7 +79,7 @@ function deleteContacts (userId, contactId) {
   })
 }
 
-function deleteContact(userId, contactId, dialogId) {
+function deleteContact (userId, contactId, dialogId) {
   User.findById(userId)
     .then(user => {
       user.contacts = user.contacts.filter(id => id.toString() !== contactId.toString())

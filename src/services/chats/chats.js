@@ -139,7 +139,7 @@ function createChat (author, chatData) {
         } else {
           if (chatData.chatType === DIALOG) {
             chatData.chatName = uuid.v4()
-            await saveContact(chatData.users[0].toString(), author)
+            await saveContact(chatData.users[0].toString(), author.toString())
           }
           const chat = new Chat(chatData)
           chat.author = author
@@ -223,7 +223,7 @@ function updateChat (id, chatData) {
   })
 }
 
-function deleteChannel(chatId) {
+function deleteChannel (chatId) {
   return new Promise((resolve, reject) => {
     Chat
       .findById(chatId)
@@ -243,7 +243,6 @@ function deleteChannel(chatId) {
   })
 }
 
-
 module.exports = {
   importIO,
   getChats,
@@ -251,5 +250,5 @@ module.exports = {
   getChatsId,
   createChat,
   updateChat,
-  deleteChannel,
+  deleteChannel
 }

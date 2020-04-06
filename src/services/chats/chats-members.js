@@ -9,7 +9,7 @@ const { updateAllUsersInChat, getLastMessageOfChats } = require('./chat-utils')
 function addMembers (chatId, users) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
-      .then( chat => {
+      .then(chat => {
         users.forEach((userId) => {
           if (chat.users.indexOf(userId) <= -1) {
             chat.users.push(userId)

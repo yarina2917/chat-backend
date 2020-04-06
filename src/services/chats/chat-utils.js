@@ -47,7 +47,7 @@ function updateAllUsersInChat (users, chatId, action) {
         if (!currentUser.chats) {
           currentUser = []
         }
-        const index = currentUser.chats.indexOf(chatId);
+        const index = currentUser.chats.indexOf(chatId)
         if (action === 'add' && index === -1) {
           currentUser.chats.push(chatId)
         } else if (action === 'delete' && index > -1) {

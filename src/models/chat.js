@@ -17,7 +17,7 @@ const chatSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   avatar: {
     url: { type: String, default: null },
-    dataId: { type: mongoose.Schema.Types.ObjectId, ref: 'File'}
+    dataId: { type: mongoose.Schema.Types.ObjectId, ref: 'File' }
   },
   users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   admins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
