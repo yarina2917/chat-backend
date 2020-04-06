@@ -158,9 +158,8 @@ function createChat (author, chatData) {
                   currentUser.chats.push(data._id)
                   await currentUser.save()
                   return getLastMessageOfChats(data)
-                    .then(chat => chatData.chatType === DIALOG ? normalizeDialog(chat, author) : pick(chat, publicChatFields))
-                    .catch(reject)
                 })
+                .then(chat => chatData.chatType === DIALOG ? normalizeDialog(chat, author) : pick(chat, publicChatFields))
                 .then(async chat => {
                   chatData.chatType === DIALOG ? await joinDialog(chat, author, chatData.users[0]) : await joinChat(chat)
                   resolve({ message: 'New chat!', chat })
