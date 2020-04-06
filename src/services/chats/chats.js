@@ -10,6 +10,7 @@ const User = require('../../models/user')
 const Message = require('../../models/message')
 
 const { DIALOG } = require('../../config/chat-types')
+const { REPORT } = require('../../config/message-types')
 
 let io
 function importIO (importIO) {
@@ -89,7 +90,7 @@ function getChats (userId) {
               return (a.lastMessage && b.lastMessage)
                 ? a.lastMessage.createdAt > b.lastMessage.createdAt ? -1 : a.lastMessage.createdAt < b.lastMessage.createdAt ? 1 : 0
                 : a.createdAt > b.createdAt ? -1 : a.createdAt < b.createdAt ? 1 : 0
-            }));
+            }))
           })
           .catch(err => reject(err))
       })
@@ -132,16 +133,13 @@ function createChat (author, chatData) {
           currentUser.chats.find(chat => chat.chatType === DIALOG &&
           (chat.users.find(user => user.toString() === chatData.users[0].toString())))
         if (chatExist) {
-          console.log('!!!!!chatExist')
           normalizeDialog(chatExist, author)
-            .then(chat => {
-              return resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) })
-            })
+            .then(chat => resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) }))
             .catch(err => reject(err))
         } else {
           if (chatData.chatType === DIALOG) {
             chatData.chatName = uuid.v4()
-            await saveContact(chatData.users[0].toString(), author.toString())
+            await saveContact(chatData.users[0].toString(), author)
           }
           const chat = new Chat(chatData)
           chat.author = author
@@ -149,12 +147,19 @@ function createChat (author, chatData) {
           chat.admins.push(author)
           chat.save()
             .then(async data => {
-              await new Message({ chatId: data._id, authorId: author, message: `New chat was created by ${currentUser.username}` }).save()
+              await new Message({
+                chatId: data._id,
+                authorId: author,
+                message: `New chat was created by ${currentUser.username}`,
+                messageType: REPORT
+              }).save()
               updateAllUsersInChat(chatData.users, data._id, 'add')
                 .then(async () => {
                   currentUser.chats.push(data._id)
                   await currentUser.save()
-                  return chatData.chatType === DIALOG ? normalizeDialog(data, author) : pick(data, publicChatFields)
+                  return getLastMessageOfChats(data)
+                    .then(chat => chatData.chatType === DIALOG ? normalizeDialog(chat, author) : pick(chat, publicChatFields))
+                    .catch(reject)
                 })
                 .then(async chat => {
                   chatData.chatType === DIALOG ? await joinDialog(chat, author, chatData.users[0]) : await joinChat(chat)
@@ -168,7 +173,7 @@ function createChat (author, chatData) {
   })
 }
 
-function saveContact(user, newContact) {
+function saveContact (user, newContact) {
   User
     .findById(user)
     .then(contact => {
