@@ -88,7 +88,7 @@ function deleteContact (userId, contactId, dialogId) {
       }
       return user.save()
     })
-    .catch(error => reject(error))
+    .catch(error => Promise.reject(error))
 }
 
 module.exports = {

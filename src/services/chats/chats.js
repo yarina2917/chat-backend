@@ -2,8 +2,7 @@ const uuid = require('uuid')
 const pick = require('lodash/pick')
 const createError = require('http-errors')
 
-const { normalizeDialog, updateAllUsersInChat, getLastMessageOfChats } = require('./chat-utils')
-const publicChatFields = ['_id', 'recipientId', 'chatName', 'description', 'chatType', 'avatar', 'author', 'users', 'admins', 'lastMessage', 'createdAt']
+const { normalizeDialog, updateAllUsersInChat, getLastMessageOfChats, publicChatFields } = require('./chat-utils')
 
 const Chat = require('../../models/chat')
 const User = require('../../models/user')
@@ -92,9 +91,9 @@ function getChats (userId) {
                 : a.createdAt > b.createdAt ? -1 : a.createdAt < b.createdAt ? 1 : 0
             }))
           })
-          .catch(err => reject(err))
+          .catch(error => reject(error))
       })
-      .catch(err => reject(err))
+      .catch(error => reject(error))
   })
 }
 
@@ -102,7 +101,7 @@ function getChatsId (userId) {
   return new Promise((resolve, reject) => {
     User.findById(userId)
       .then(data => resolve(data.chats))
-      .catch(err => reject(err))
+      .catch(error => reject(error))
   })
 }
 
@@ -115,12 +114,12 @@ function getChatById (chatId, userId) {
         if (data.chatType === DIALOG) {
           normalizeDialog(data, userId)
             .then(chat => resolve(chat))
-            .catch(err => reject(err))
+            .catch(error => reject(error))
         } else {
           resolve(data)
         }
       })
-      .catch(err => reject(err))
+      .catch(error => reject(error))
   })
 }
 
@@ -165,10 +164,10 @@ function createChat (author, chatData) {
                   resolve({ message: 'New chat!', chat })
                 })
             })
-            .catch(reject)
+            .catch(error => reject(error))
         }
       })
-      .catch(reject)
+      .catch(error => reject(error))
   })
 }
 
@@ -218,7 +217,7 @@ function updateChat (id, chatData) {
         io.in(id).emit('notify-update-chat', { chatId: id, chatData })
         resolve(pick(data, publicChatFields))
       })
-      .catch(error => reject(error.message))
+      .catch(error => reject(error))
   })
 }
 
@@ -235,7 +234,7 @@ function deleteChannel (chatId) {
             resolve()
           })
       })
-      .catch(err => reject(err))
+      .catch(error => reject(error))
   })
 }
 

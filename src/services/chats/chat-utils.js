@@ -19,12 +19,12 @@ async function normalizeDialog (data, currentUserId) {
         }
       }))
         .then(data => resolve(data))
-        .catch(err => reject(err))
+        .catch(error => reject(error))
     } else {
       const recipient = data.users.find(userId => (typeof userId === 'string' ? userId : userId._id).toString() !== currentUserId.toString())
       normalizeRecipient(data, recipient)
         .then(chat => resolve(chat))
-        .catch(reject)
+        .catch(error => reject(error))
     }
   })
 }
@@ -84,5 +84,6 @@ function getLastMessageOfChats (chats) {
 module.exports = {
   normalizeDialog,
   updateAllUsersInChat,
-  getLastMessageOfChats
+  getLastMessageOfChats,
+  publicChatFields
 }

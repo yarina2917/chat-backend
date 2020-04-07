@@ -24,7 +24,7 @@ function addMembers (chatId, users) {
             resolve({ users, chat })
           })
       })
-      .catch(error => reject(error.message))
+      .catch(error => reject(error))
   })
 }
 
@@ -41,7 +41,7 @@ function removeMember (chatId, userId) {
               Message
                 .deleteMany({ chatId })
                 .then(() => chat.remove())
-                .catch(reject)
+                .catch(error => reject(error))
           } else {
             promise = chat.save()
           }
@@ -55,12 +55,12 @@ function removeMember (chatId, userId) {
                   resolve({ userId, chatId })
                 })
             })
-            .catch(reject)
+            .catch(error => reject(error))
         } else {
           reject(createError(404, 'The user was not found!'))
         }
       })
-      .catch(reject)
+      .catch(error => reject(error))
   })
 }
 
