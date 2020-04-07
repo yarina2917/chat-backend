@@ -16,6 +16,7 @@ const io = require('socket.io')(http)
 require('./services/sockets/sockets').socketConnect(io)
 require('./services/chats/chats').importIO(io)
 require('./services/avatars/avatars').importIO(io)
+require('./services/contacts/contacts').importIO(io)
 
 require('dotenv').config()
 

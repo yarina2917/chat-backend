@@ -1,29 +1,15 @@
-const pick = require('lodash/pick')
-
-const createError = require('http-errors')
-
 const Message = require('../../models/message')
 const User = require('../../models/user')
-const Chat = require('../../models/chat')
+const { MESSAGE } = require('../../config/message-types')
 
 function saveMessage (messageData) {
   return new Promise((resolve, reject) => {
     const message = new Message(messageData)
     message.save()
       .then(message => {
-        Chat
-          .findById(messageData.chatId)
-          .then(chat => {
-            chat.lastMessage = message._id
-            return chat.save()
-          })
-          .then(() => {
-            User
-              .findById(messageData.authorId)
-              .then(user => {
-                resolve(generateMessagesObject(message, user))
-              })
-          })
+        User
+          .findById(messageData.authorId)
+          .then(user => resolve(generateMessagesObject(message, user)))
       })
       .catch(error => reject(error))
   })
@@ -40,6 +26,15 @@ function getMessages (chatId) {
   })
 }
 
+function deleteMessages (messageData) {
+  return new Promise((resolve, reject) => {
+    Message
+      .deleteMany({ _id: messageData })
+      .then(() => resolve())
+      .catch(error => reject(error))
+  })
+}
+
 function generateMessagesObject (message, user) {
   return {
     _id: message.id,
@@ -47,6 +42,7 @@ function generateMessagesObject (message, user) {
     date: message.createdAt,
     selected: false,
     chatId: message.chatId,
+    messageType: message.messageType || MESSAGE,
     user: {
       _id: user._id,
       username: user.username,
@@ -54,31 +50,6 @@ function generateMessagesObject (message, user) {
       selected: false
     }
   }
-}
-
-function deleteMessages (messageData, chatId) {
-  return new Promise((resolve, reject) => {
-    Message
-      .deleteMany({ _id: messageData })
-      .then(() => {
-        Chat
-          .findById(chatId)
-          .then(chat => {
-            if (chat.lastMessage && messageData.includes(chat.lastMessage.toString())) {
-              Message
-                .find({ chatId })
-                .sort({ _id: -1 }).limit(1)
-                .then((data) => {
-                  chat.lastMessage = data[0] || null
-                  return chat.save()
-                })
-            }
-            resolve()
-          })
-          .then(() => resolve())
-      })
-      .catch(error => reject(error))
-  })
 }
 
 module.exports = {

@@ -83,7 +83,7 @@ function deleteAvatar (id, type) {
             }
             return user.save()
           })
-          .catch(err => reject(err))
+          .catch(error => reject(error))
       })
       .then(resolve)
       .catch(reject)

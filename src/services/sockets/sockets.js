@@ -44,7 +44,7 @@ function socketConnect (io) {
     })
 
     socket.on('delete-messages', data => {
-      messagesService.deleteMessages(data.messages, data.chatId)
+      messagesService.deleteMessages(data.messages)
         .then(() => {
           io.in(data.chatId).emit('notify-delete-message', { chatId: data.chatId, messages: data.messages })
         })
