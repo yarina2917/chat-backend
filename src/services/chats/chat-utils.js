@@ -75,8 +75,9 @@ function getLastMessageOfChats (chats) {
       .populate('authorId')
       .sort({ createdAt: -1 })
       .then(lastMessage => {
-        chats.lastMessage = lastMessage
-        return chats
+        const chat = chats.toObject()
+        chat.lastMessage = lastMessage
+        return chat
       })
   }
 }

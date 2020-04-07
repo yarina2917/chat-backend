@@ -1,5 +1,6 @@
 const Message = require('../../models/message')
 const User = require('../../models/user')
+
 const { MESSAGE } = require('../../config/message-types')
 
 function saveMessage (messageData) {
@@ -15,13 +16,14 @@ function saveMessage (messageData) {
   })
 }
 
-function getMessages (chatId) {
+function getMessages (chatId, date) {
   return new Promise((resolve, reject) => {
     Message
-      .find({ chatId })
+      .find({ chatId, createdAt: { $lt: date ? new Date(date).toISOString() : new Date().toISOString() } })
       .populate('authorId')
+      .limit(20)
       .sort({ createdAt: -1 })
-      .then((messages) => resolve(messages.map(message => generateMessagesObject(message, message.authorId))))
+      .then(messages => resolve(messages.map(message => generateMessagesObject(message, message.authorId))))
       .catch(error => reject(error))
   })
 }
@@ -43,6 +45,7 @@ function generateMessagesObject (message, user) {
     selected: false,
     chatId: message.chatId,
     messageType: message.messageType || MESSAGE,
+    createdAt: message.createdAt,
     user: {
       _id: user._id,
       username: user.username,
