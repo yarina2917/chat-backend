@@ -6,8 +6,6 @@ const validator = require('../../validators/user/validator-user')
 const { validate } = require('../../validators/validate-middleware')
 
 const userService = require('../../services/users/users')
-// TODO add into upload
-const requireContentType = require('../../services/errors/require-content-type')
 
 router.post('/users/create', validate(validator.createUser), (req, res, next) => {
   userService.createUser(req.body)

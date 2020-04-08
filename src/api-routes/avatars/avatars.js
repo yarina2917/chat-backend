@@ -4,8 +4,9 @@ const router = express.Router()
 const avatarsService = require('../../services/avatars/avatars')
 
 const authentication = require('../../services/passport/authentificate-midleware')
+const requireContentType = require('../../validators/require-content-type-middleware')
 
-router.put('/avatars/:id', authentication.apiKey, (req, res, next) => {
+router.put('/avatars/:id', authentication.apiKey, requireContentType, (req, res, next) => {
   const chunks = []
   req.on('data', chunk => chunks.push(chunk))
   req.on('end', () => {
