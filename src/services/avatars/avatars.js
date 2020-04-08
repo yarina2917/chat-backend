@@ -73,9 +73,7 @@ function deleteAvatar (id, type) {
       .then(user => {
         return File.findOneAndRemove({ _id: user.avatar._id })
           .then(() => {
-            user.avatar = {
-              url: null
-            }
+            user.avatar = { url: null }
             if (type !== PROFILE) {
               io.in(id).emit('notify-update-avatar', { chatId: id, url: null })
             }
