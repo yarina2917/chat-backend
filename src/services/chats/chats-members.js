@@ -11,7 +11,7 @@ function addMembers (chatId, users) {
     Chat.findById(chatId)
       .then(chat => {
         users.forEach((userId) => {
-          if (chat.users.indexOf(userId) <= -1) {
+          if (chat.users.indexOf(userId) === -1) {
             chat.users.push(userId)
           }
         })
@@ -20,9 +20,7 @@ function addMembers (chatId, users) {
       .then(chat => getLastMessageOfChats(chat))
       .then(chat => {
         updateAllUsersInChat(users, chatId, 'add')
-          .then(async users => {
-            resolve({ users, chat })
-          })
+          .then(users => resolve({ users, chat }))
       })
       .catch(error => reject(error))
   })

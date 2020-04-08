@@ -36,7 +36,7 @@ function normalizeRecipient (data, recipient) {
       newData.recipientId = recipient._id
       newData.chatName = user.username
       newData.avatar = user.avatar
-      return newData
+      return pick(newData, publicChatFields)
     })
 }
 

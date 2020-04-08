@@ -50,7 +50,6 @@ function updateAvatar (id, imageBuffer, originalName, type) {
               url: file.publicUrl
             }
             await user.save()
-            // TODO: think about updating profile avatar
             if (type !== PROFILE) {
               io.in(id).emit('notify-update-avatar', { chatId: id, url: file.publicUrl })
             }
@@ -77,7 +76,6 @@ function deleteAvatar (id, type) {
             user.avatar = {
               url: null
             }
-            // TODO: think about updating profile avatar
             if (type !== PROFILE) {
               io.in(id).emit('notify-update-avatar', { chatId: id, url: null })
             }
