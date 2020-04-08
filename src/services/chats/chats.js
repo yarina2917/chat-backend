@@ -173,7 +173,7 @@ function deleteChannel (chatId) {
   })
 }
 
-// TODO optimize with
+// TODO optimize with aggregate
 // function getChats (userId) {
 //   return new Promise((resolve, reject) => {
 //     Message.aggregate(
