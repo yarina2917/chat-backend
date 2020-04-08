@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
 
-const authentication = require('../../services/passport/authentificate-midleware')
-
 const messagesService = require('../../services/messages/messages')
+
+const authentication = require('../../services/passport/authentificate-midleware')
 
 router.get('/messages/:chatId', authentication.apiKey, (req, res, next) => {
   messagesService.getMessages(req.params.chatId)

@@ -1,18 +1,11 @@
 const express = require('express')
 const router = express.Router()
 
+const chatService = require('../../services/chats/chats')
+
 const authentication = require('../../services/passport/authentificate-midleware')
 const validator = require('../../validators/chat/validator-chat')
 const { validate } = require('../../validators/validate-middleware')
-
-const chatService = require('../../services/chats/chats')
-
-// TODO ADD AUTHOR middleware
-// router.get('/chats', authentication.apiKey, (req, res, next) => {
-//   chatService.getChats(req.user._id)
-//     .then(data => res.status(200).send(data))
-//     .catch(next)
-// })
 
 router.get('/chats', authentication.apiKey, (req, res, next) => {
   chatService.getChats(req.user._id)

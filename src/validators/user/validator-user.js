@@ -12,9 +12,7 @@ function generateUserValidator (type) {
       }
     }
   }
-
   schema.required = type === 'create' ? ['username', 'password'] : ['username']
-
   return schema
 }
 

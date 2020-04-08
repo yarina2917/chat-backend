@@ -15,9 +15,7 @@ function generateChatValidator (type) {
       }
     }
   }
-
   schema.required = type === 'create' ? ['chatName', 'chatType'] : ['chatName']
-
   return schema
 }
 
