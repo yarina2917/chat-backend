@@ -17,11 +17,10 @@ function importIO (importIO) {
 }
 
 function getChats (userId) {
-  // TODO optimize with
+  // TODO optimize with aggregate
   // return new Promise((resolve, reject) => {
   //   Message.aggregate(
   //     [
-  //       // Matching pipeline, similar to find
   //       {
   //         '$match': {
   //           'chatId': { "$in": user.chats }
@@ -48,7 +47,6 @@ function getChats (userId) {
   //           'createdAt': -1
   //         }
   //       },
-  //       // Project pipeline, similar to select
   //       {
   //         '$project': {
   //           '_id': 0,
@@ -59,9 +57,8 @@ function getChats (userId) {
   //       }
   //     ],
   //     function (err, messages) {
-  //       // Result is an array of documents
   //       if (err) {
-  //         console.log('err231231231', err)
+  //         console.error(err)
   //       } else {
   //         Message.populate(messages, [
   //           {
