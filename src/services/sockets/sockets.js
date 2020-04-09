@@ -10,20 +10,16 @@ function socketConnect (io) {
     connected.push({ userId, socketId: socket.id })
 
     chatsService.getChatsId(userId)
-      .then(chats => {
-        chats.forEach(chat => socket.join(chat))
-        console.log('JOIN to chats', userId)
-      })
-      .catch(err => console.log('err', err))
+      .then(chats => chats.forEach(chat => socket.join(chat)))
+      .catch(error => console.error('Get chats data error', error))
 
     socket.on('disconnect', () => {
       chatsService.getChatsId(userId)
         .then(chats => {
           chats.forEach(chat => socket.leave(chat))
           connected = connected.filter(user => user.userId !== userId)
-          console.log('LEAVE chat', userId)
         })
-        .catch(err => console.log('err', err))
+        .catch(error => console.error('Get chats data error', error))
     })
 
     socket.on('typing', data => {
@@ -40,7 +36,7 @@ function socketConnect (io) {
           socket.in(messageData.chatId).emit('notify-stop-typing', { chatId: messageData.chatId, username: data.user.username })
           io.in(messageData.chatId).emit('notify-message', data)
         })
-        .catch(err => console.log(err))
+        .catch(error => console.error('Save message error', error))
     })
 
     socket.on('delete-messages', data => {
@@ -48,7 +44,7 @@ function socketConnect (io) {
         .then(() => {
           io.in(data.chatId).emit('notify-delete-message', { chatId: data.chatId, messages: data.messages })
         })
-        .catch(err => console.log(err))
+        .catch(error => console.error('Delete message error', error))
     })
 
     socket.on('add-members', data => {
@@ -63,7 +59,7 @@ function socketConnect (io) {
             }
           })
         })
-        .catch(err => console.log(err))
+        .catch(error => console.error('Add member error', error))
     })
 
     socket.on('remove-members', data => {
@@ -75,7 +71,7 @@ function socketConnect (io) {
             io.sockets.connected[connectedUser.socketId].leave(data.chatId)
           }
         })
-        .catch(err => console.log(err))
+        .catch(error => console.error('Remove member error', error))
     })
   })
 }

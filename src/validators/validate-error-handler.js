@@ -1,5 +1,5 @@
 // ajv schema error handler
-const validateError = (error, req, res, next) => {
+const validateError = (error, req, res) => {
   if (error.errors) {
     if (/^\/api/.test(req.originalUrl)) {
       return res.status(400).json({

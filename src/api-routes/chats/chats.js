@@ -1,14 +1,12 @@
 const express = require('express')
 const router = express.Router()
 
-const Chat = require('../../models/chat')
+const chatService = require('../../services/chats/chats')
 
 const authentication = require('../../services/passport/authentificate-midleware')
 const validator = require('../../validators/chat/validator-chat')
 const { validate } = require('../../validators/validate-middleware')
 const { canDeleteChannel } = require('../../validators/can-delete-channel-middleware')
-
-const chatService = require('../../services/chats/chats')
 
 router.get('/chats', authentication.apiKey, (req, res, next) => {
   chatService.getChats(req.user._id)

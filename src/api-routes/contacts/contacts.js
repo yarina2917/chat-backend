@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
 
-const authentication = require('../../services/passport/authentificate-midleware')
-
 const contactsService = require('../../services/contacts/contacts')
+
+const authentication = require('../../services/passport/authentificate-midleware')
 
 router.get('/contacts/:id', authentication.apiKey, (req, res) => {
   res.status(200).send({ data: !!req.user.contacts.includes(req.params.id) })

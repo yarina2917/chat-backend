@@ -1,7 +1,8 @@
 const { format } = require('util')
 const path = require('path')
-const { Storage } = require('@google-cloud/storage')
 const uuid = require('uuid')
+const { Storage } = require('@google-cloud/storage')
+
 const GOOGLE_CLOUD_KEYFILE = path.resolve(__dirname, '../../gh-chat-b5d531aa4d85.json')
 
 const storage = new Storage({
@@ -20,17 +21,15 @@ const bucket = storage.bucket('gh-chat')
 
 module.exports.upload = (fileBuffer, fileExt) => new Promise((resolve, reject) => {
   const blob = bucket.file(`avatars/${uuid.v4()}.${fileExt}`)
-  const blobStream = blob.createWriteStream({
-    resumable: false
-  })
-  blobStream.on('finish', () => {
-    const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`)
-    resolve({
-      key: blob.name,
-      publicUrl: publicUrl
+  blob.createWriteStream({ resumable: false })
+   .on('finish', () => {
+      const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`)
+      resolve({
+        key: blob.name,
+        publicUrl: publicUrl
+      })
     })
-  })
-    .on('error', (err) => reject(err))
+    .on('error', error => reject(error))
     .end(fileBuffer)
 })
 
@@ -38,5 +37,5 @@ module.exports.remove = (key) => new Promise((resolve, reject) => {
   const file = bucket.file(key)
   file.delete()
     .then(() => resolve('Deleted'))
-    .catch(err => reject(err))
+    .catch(error => reject(error))
 })

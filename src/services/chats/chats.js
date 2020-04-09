@@ -1,6 +1,5 @@
 const uuid = require('uuid')
 const pick = require('lodash/pick')
-const createError = require('http-errors')
 
 const { normalizeDialog, updateAllUsersInChat, getLastMessageOfChats, publicChatFields } = require('./chat-utils')
 
@@ -17,78 +16,15 @@ function importIO (importIO) {
 }
 
 function getChats (userId) {
-  // TODO optimize with aggregate
-  // return new Promise((resolve, reject) => {
-  //   Message.aggregate(
-  //     [
-  //       {
-  //         '$match': {
-  //           'chatId': { "$in": user.chats }
-  //         }
-  //       },
-  //       // Grouping pipeline
-  //       {
-  //         '$group': {
-  //           '_id': '$chatId',
-  //           'chatId': {
-  //             '$first': '$chatId'
-  //           },
-  //           'lastMessage': {
-  //             '$last': '$_id'
-  //           },
-  //           'createdAt': {
-  //             '$first': '$createdAt'
-  //           }
-  //         }
-  //       },
-  //       // Sorting pipeline
-  //       {
-  //         '$sort': {
-  //           'createdAt': -1
-  //         }
-  //       },
-  //       {
-  //         '$project': {
-  //           '_id': 0,
-  //           'chatId': '$_id',
-  //           'lastMessage': 1,
-  //           'createdAt': 1
-  //         }
-  //       }
-  //     ],
-  //     function (err, messages) {
-  //       if (err) {
-  //         console.error(err)
-  //       } else {
-  //         Message.populate(messages, [
-  //           {
-  //             path: 'lastMessage',
-  //             populate: {
-  //               path: 'authorId',
-  //               select: ['avatar', 'createdAt', 'authotId', 'username']
-  //             },
-  //             select: ['chatId', 'createdAt', 'message']
-  //           },
-  //           { path: 'chatId' }]
-  //         ).then(result => resolve(result.filter(chat => chat.chatId)))
-  //       }
-  //     }
-  //   )
-  // })
   return new Promise((resolve, reject) => {
     User.findById(userId)
       .populate({ path: 'chats' })
+      .then(user => normalizeDialog(user.chats, userId))
+      .then(data => getLastMessageOfChats(data))
       .then(data => {
-        normalizeDialog(data.chats, userId)
-          .then(data => getLastMessageOfChats(data))
-          .then(data => {
-            resolve(data.sort((a, b) => {
-              return (a.lastMessage && b.lastMessage)
-                ? a.lastMessage.createdAt > b.lastMessage.createdAt ? -1 : a.lastMessage.createdAt < b.lastMessage.createdAt ? 1 : 0
-                : a.createdAt > b.createdAt ? -1 : a.createdAt < b.createdAt ? 1 : 0
-            }))
-          })
-          .catch(error => reject(error))
+        resolve(data.sort((a, b) =>
+          a.lastMessage.createdAt > b.lastMessage.createdAt ? -1 : a.lastMessage.createdAt < b.lastMessage.createdAt ? 1 : 0
+        ))
       })
       .catch(error => reject(error))
   })
@@ -106,14 +42,13 @@ function getChatById (chatId, userId) {
   return new Promise((resolve, reject) => {
     Chat.findById(chatId)
       .populate({ path: 'users' })
-      .populate({ path: 'avatar.chatId' })
       .then(data => {
         if (data.chatType === DIALOG) {
           normalizeDialog(data, userId)
             .then(chat => resolve(chat))
             .catch(error => reject(error))
         } else {
-          resolve(data)
+          resolve(pick(data, publicChatFields))
         }
       })
       .catch(error => reject(error))
@@ -125,17 +60,15 @@ function createChat (author, chatData) {
     User.findById(author)
       .populate('chats')
       .then(async currentUser => {
-        const chatExist = chatData.chatType === DIALOG &&
-          currentUser.chats.find(chat => chat.chatType === DIALOG &&
-          (chat.users.find(user => user.toString() === chatData.users[0].toString())))
-        if (chatExist) {
-          normalizeDialog(chatExist, author)
-            .then(chat => resolve({ message: 'Chat already exist!', chat: pick(chat, publicChatFields) }))
+        const dialogExist = checkDialogs(chatData, currentUser)
+        if (dialogExist) {
+          normalizeDialog(dialogExist, author)
+            .then(chat => resolve({ message: 'Chat already exist!', chat }))
             .catch(err => reject(err))
         } else {
           if (chatData.chatType === DIALOG) {
             chatData.chatName = uuid.v4()
-            await saveContact(chatData.users[0].toString(), author.toString())
+            await saveContact(chatData.users[0], author.toString())
           }
           const chat = new Chat(chatData)
           chat.author = author
@@ -168,12 +101,17 @@ function createChat (author, chatData) {
   })
 }
 
+function checkDialogs(chatData, currentUser) {
+  return chatData.chatType === DIALOG &&
+  currentUser.chats.find(chat => chat.chatType === DIALOG &&
+    (chat.users.find(user => user.toString() === chatData.users[0].toString())))
+}
+
 function saveContact (user, newContact) {
   User
     .findById(user)
     .then(contact => {
-      const index = contact.contacts.includes(newContact)
-      if (!index) {
+      if (contact.contacts.indexOf(newContact) === -1) {
         contact.contacts.push(newContact)
       }
       return contact.save()
@@ -228,12 +166,76 @@ function deleteChannel (chatId) {
           .then(() => Message.deleteMany({ chatId }))
           .then(() => {
             io.in(chatId).emit('notify-delete-chat', { chatId })
-            resolve()
+            resolve({ message: 'Success' })
           })
       })
       .catch(error => reject(error))
   })
 }
+
+// TODO optimize with aggregate
+// function getChats (userId) {
+//   return new Promise((resolve, reject) => {
+//     Message.aggregate(
+//       [
+//         // Matching pipeline, similar to find
+//         {
+//           '$match': {
+//             'chatId': { "$in": user.chats }
+//           }
+//         },
+//         // Grouping pipeline
+//         {
+//           '$group': {
+//             '_id': '$chatId',
+//             'chatId': {
+//               '$first': '$chatId'
+//             },
+//             'lastMessage': {
+//               '$last': '$_id'
+//             },
+//             'createdAt': {
+//               '$first': '$createdAt'
+//             }
+//           }
+//         },
+//         // Sorting pipeline
+//         {
+//           '$sort': {
+//             'createdAt': -1
+//           }
+//         },
+//         // Project pipeline, similar to select
+//         {
+//           '$project': {
+//             '_id': 0,
+//             'chatId': '$_id',
+//             'lastMessage': 1,
+//             'createdAt': 1
+//           }
+//         }
+//       ],
+//       function (err, messages) {
+//         // Result is an array of documents
+//         if (err) {
+//           console.log('err', err)
+//         } else {
+//           Message.populate(messages, [
+//             {
+//               path: 'lastMessage',
+//               populate: {
+//                 path: 'authorId',
+//                 select: ['avatar', 'createdAt', 'authotId', 'username']
+//               },
+//               select: ['chatId', 'createdAt', 'message']
+//             },
+//             { path: 'chatId' }]
+//           ).then(result => resolve(result.filter(chat => chat.chatId)))
+//         }
+//       }
+//     )
+//   })
+// }
 
 module.exports = {
   importIO,

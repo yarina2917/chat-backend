@@ -14,7 +14,7 @@ router.post('/users/create', validate(validator.createUser), (req, res, next) =>
 })
 
 router.post('/users/login', authentication.local, (req, res, next) => {
-  userService.loginUser(req.body)
+  userService.loginUser(req.user._id)
     .then(data => res.status(200).send(data))
     .catch(next)
 })
