@@ -4,19 +4,19 @@ services:
     ports:
     - 3000:3000
     links:
-      - db
+      - mongo
     depends_on:
-      - db
+      - mongo
     build:
       dockerfile: Dockerfile
       context: ./
     volumes:
       - ./src:/srv/src
       - /node_modules
-  db:
+  mongo:
     image: mongo
     restart: on-failure
     expose:
       - 27017
     volumes:
-      - /data/db
+      - /data/mongo

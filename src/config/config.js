@@ -1,11 +1,7 @@
-const DEV = true
 const config = {
   port: process.env.PORT || 3000,
-  dbUrl: DEV
-    ? process.env.DB_LOCAL_URL || 'mongodb://localhost/chat'
-    : `${process.env.DB_SRV}${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}/test?retryWrites=true&w=majority`,
+  dbUrl: `${process.env.MONGO_SRV}${process.env.MONGO_USER}:${process.env.NEW_MONGO_PASSWORD}@${process.env.MONGO_HOST}/test?retryWrites=true&w=majority`,
   secretKey: 'GnsKWV78X88BZQkvqzL2WRu333j10qDI'
 }
 
 module.exports = config
-module.exports.DEV = DEV
