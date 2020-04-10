@@ -31,7 +31,7 @@ require('./loaders/datastore')
 
     app.use((req, res, next) => next(createError(404)))
 
-    app.use(validateError)
+    app.use((err, req, res, next) => validateError(err, req, res, next))
 
     http.listen(config.port, () => {
       console.log(`Server works on port ${config.port}`)

@@ -39,13 +39,13 @@ function deleteMessages (messageData) {
 
 function generateMessagesObject (message, user) {
   return {
-    _id: message.id,
+    _id: message._id,
     message: message.message,
     date: message.createdAt,
-    selected: false,
     chatId: message.chatId,
     messageType: message.messageType || MESSAGE,
     createdAt: message.createdAt,
+    selected: false,
     user: {
       _id: user._id,
       username: user.username,
