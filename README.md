@@ -12,9 +12,11 @@ To install dependencies
 
 ## Start development
 
-To start angular development watcher
+To start server without docker check .env file
 
-    npm run start:dev
+To start server with docker
+
+    docker-compose up
     
 ## Test standard
 
