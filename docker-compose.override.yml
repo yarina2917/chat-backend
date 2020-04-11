@@ -1,0 +1,11 @@
+version: '3'
+services:
+  web:
+    environment:
+      PORT: 3000
+      MONGO_URL: mongodb://db:27017/chat
+      MONGO_USER: ghchat
+      NEW_MONGO_PASSWORD: ghchat
+      MONGO_HOST: cluster0-zrwa7.gcp.mongodb.net
+      MONGO_SRV: mongodb+srv://
+      GOOGLE_CLOUD_PROJECT_ID: gh-chat

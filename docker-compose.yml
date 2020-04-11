@@ -1,0 +1,22 @@
+version: '3'
+services:
+  web:
+    ports:
+    - 3000:3000
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    volumes:
+      - ./src:/srv/src
+      - /node_modules
+  mongo:
+    image: mongo
+    restart: on-failure
+    expose:
+      - 27017
+    volumes:
+      - /data/mongo

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      component: web
+  template:
+    metadata:
+      labels:
+        component: web
+    spec:
+      containers:
+        - name: web
+          image: bilmakovchik/gh-chat
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: '3000'
+            - name: MONGO_USER
+              value: ghchat
+            - name: NEW_MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: newmongopassword
+                  key: NEW_MONGO_PASSWORD
+            - name: MONGO_SRV
+              value: mongodb+srv://
+            - name: GOOGLE_CLOUD_PROJECT_ID
+              value: gh-chat
+            - name: MONGO_HOST
+              value: cluster0-zrwa7.gcp.mongodb.net
